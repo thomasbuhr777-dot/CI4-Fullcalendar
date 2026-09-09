@@ -12,16 +12,20 @@ class TenantUserModel extends Model
     protected $allowedFields = [
         'tenant_id',
         'user_id',
-        'role'
+        'is_default',
     ];
 
     protected $useTimestamps = true;
 
-    public function tenantOfUser(int $userId)
+    /**
+     * Liefert den Standard-Mandanten eines Benutzers.
+     */
+    public function defaultTenantForUser(int $userId): ?array
     {
         return $this->select('tenant_users.*, tenants.name, tenants.slug')
             ->join('tenants', 'tenants.id = tenant_users.tenant_id')
-            ->where('user_id', $userId)
+            ->where('tenant_users.user_id', $userId)
+            ->where('tenant_users.is_default', 1)
             ->first();
     }
 }
