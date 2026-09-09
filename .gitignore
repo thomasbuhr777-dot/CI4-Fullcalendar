@@ -1,0 +1,23 @@
+# Composer
+/vendor/
+
+# Node
+/node_modules/
+
+# Vite Build
+/public/build/
+
+# CI4 writable Verzeichnis
+/writable/*
+!/writable/.gitkeep
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
