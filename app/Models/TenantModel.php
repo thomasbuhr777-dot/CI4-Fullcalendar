@@ -6,8 +6,10 @@ use CodeIgniter\Model;
 
 class TenantModel extends Model
 {
-    protected $table      = 'tenants';
+    protected $table = 'tenants';
     protected $primaryKey = 'id';
+
+    protected $returnType = 'array';
 
     protected $allowedFields = [
         'name',

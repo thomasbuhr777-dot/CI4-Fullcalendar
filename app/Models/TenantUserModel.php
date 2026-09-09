@@ -6,8 +6,10 @@ use CodeIgniter\Model;
 
 class TenantUserModel extends Model
 {
-    protected $table      = 'tenant_users';
+    protected $table = 'tenant_users';
     protected $primaryKey = 'id';
+
+    protected $returnType = 'array';
 
     protected $allowedFields = [
         'tenant_id',
@@ -18,11 +20,11 @@ class TenantUserModel extends Model
     protected $useTimestamps = true;
 
     /**
-     * Liefert den Standard-Mandanten eines Benutzers.
+     * Liefert den Standardmandanten eines Shield-Benutzers.
      */
     public function defaultTenantForUser(int $userId): ?array
     {
-        return $this->select('tenant_users.*, tenants.name, tenants.slug')
+        return $this->select('tenant_users.tenant_id, tenants.name, tenants.slug')
             ->join('tenants', 'tenants.id = tenant_users.tenant_id')
             ->where('tenant_users.user_id', $userId)
             ->where('tenant_users.is_default', 1)

@@ -6,20 +6,41 @@ use App\Models\TenantUserModel;
 
 class TenantService
 {
+    private ?array $tenant = null;
+
     public function current(): ?array
     {
+        if ($this->tenant !== null) {
+            return $this->tenant;
+        }
+
         if (! auth()->loggedIn()) {
             return null;
         }
 
-        $userId = auth()->id();
+        $this->tenant = (new TenantUserModel())
+            ->defaultTenantForUser(auth()->id());
 
-        return (new TenantUserModel())
-            ->tenantOfUser($userId);
+        return $this->tenant;
     }
 
     public function id(): ?int
     {
-        return session('tenant_id');
+        return $this->current()['tenant_id'] ?? null;
+    }
+
+    public function name(): ?string
+    {
+        return $this->current()['name'] ?? null;
+    }
+
+    public function slug(): ?string
+    {
+        return $this->current()['slug'] ?? null;
+    }
+
+    public function exists(): bool
+    {
+        return $this->current() !== null;
     }
 }

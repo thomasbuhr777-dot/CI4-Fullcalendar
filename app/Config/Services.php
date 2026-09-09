@@ -29,4 +29,15 @@ class Services extends BaseService
      *     return new \CodeIgniter\Example();
      * }
      */
+
+    public static function tenant(bool $getShared = true): TenantService
+{
+    if ($getShared) {
+        return static::getSharedInstance('tenant');
+    }
+
+    return new TenantService();
 }
+}
+
+
