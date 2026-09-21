@@ -60,7 +60,7 @@ class CreateEvents extends Migration
             ],
 
 'created_by' => [
-    'type'       => 'BIGINT',
+    'type'       => 'INT',
     'constraint' => 20,
     'unsigned'   => true,
 ],

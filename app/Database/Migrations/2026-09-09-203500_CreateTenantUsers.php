@@ -24,7 +24,7 @@ class CreateTenantUsers extends Migration
 
             // Shield verwendet BIGINT UNSIGNED für users.id
             'user_id' => [
-                'type'       => 'BIGINT',
+                'type'       => 'INT',
                 'constraint' => 20,
                 'unsigned'   => true,
             ],
