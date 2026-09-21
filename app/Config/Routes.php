@@ -13,6 +13,7 @@ $routes->get('calendar', 'Calendar::index', ['filter' => 'session']);
 $routes->group('api', ['filter' => 'session'], static function ($routes) {
 
     $routes->get('events', 'Api\Event::index');
+     $routes->post('events', 'Api\Event::create');
 
 });
 

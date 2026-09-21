@@ -42,4 +42,47 @@ class Event extends BaseController
 
     return $this->response->setJSON($result);
 }
+
+public function create()
+{
+    $tenantId = service('tenant')->id();
+
+    if ($tenantId === null) {
+        return $this->response
+            ->setStatusCode(403)
+            ->setJSON(['success' => false]);
+    }
+
+    $calendarId = db_connect()
+        ->table('calendars')
+        ->where('tenant_id', $tenantId)
+        ->orderBy('id')
+        ->get()
+        ->getRowArray()['id'];
+
+    $userId = auth()->id();
+
+    $model = new EventModel();
+
+    $id = $model->insert([
+        'tenant_id'   => $tenantId,
+        'calendar_id' => $calendarId,
+        'category_id' => null,
+
+        'title'       => $this->request->getPost('title'),
+        'description' => $this->request->getPost('description'),
+
+        'start'       => $this->request->getPost('start'),
+        'end'         => $this->request->getPost('start'),
+
+        'all_day'     => 1,
+
+        'created_by'  => $userId,
+    ]);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'id'      => $id,
+    ]);
+}
 }
