@@ -6,8 +6,7 @@ use CodeIgniter\Model;
 
 class EventModel extends Model
 {
-    protected $table = 'events';
-
+    protected $table      = 'events';
     protected $primaryKey = 'id';
 
     protected $returnType = 'array';
@@ -27,16 +26,16 @@ class EventModel extends Model
     protected $useTimestamps = true;
 
     /**
-     * Alle Termine eines Mandanten im Zeitraum.
+     * Liefert alle Termine eines Mandanten im gewünschten Zeitraum.
      */
     public function calendarEvents(int $tenantId, string $start, string $end): array
     {
-        return $this
-            ->select('events.*, calendars.color')
+        return $this->select('events.*, calendars.color')
             ->join('calendars', 'calendars.id = events.calendar_id')
             ->where('events.tenant_id', $tenantId)
             ->where('events.start >=', $start)
             ->where('events.start <=', $end)
+            ->orderBy('events.start', 'ASC')
             ->findAll();
     }
 }

@@ -3,6 +3,7 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseService;
+use App\Services\TenantService;
 
 /**
  * Services Configuration file.
