@@ -133,6 +133,42 @@ public function update($id)
     ]);
 }
 
+public function move($id)
+{
+    $tenantId = service('tenant')->id();
+
+    $model = new EventModel();
+
+    $event = $model->findTenantEvent($tenantId, (int)$id);
+
+    if (! $event) {
+        return $this->response
+            ->setStatusCode(404)
+            ->setJSON(['success' => false]);
+    }
+
+    // HTML datetime-local → MySQL DATETIME
+    $start = str_replace('T', ' ', $this->request->getPost('start'));
+    $end   = str_replace('T', ' ', $this->request->getPost('end'));
+
+    if (strlen($start) === 16) {
+        $start .= ':00';
+    }
+
+    if ($end && strlen($end) === 16) {
+        $end .= ':00';
+    }
+
+    $model->update($id, [
+        'start' => $start,
+        'end'   => $end,
+    ]);
+
+    return $this->response->setJSON([
+        'success' => true,
+    ]);
+}
+
 public function delete($id)
 {
     $tenantId = service('tenant')->id();

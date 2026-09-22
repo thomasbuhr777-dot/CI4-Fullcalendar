@@ -19,6 +19,8 @@ $routes->group('api', ['filter' => 'session'], static function ($routes) {
    $routes->post('events/(:num)', 'Api\Event::update/$1');
    $routes->delete('events/(:num)', 'Api\Event::delete/$1');
 
+   $routes->post('events/(:num)/move', 'Api\Event::move/$1');
+
 });
 
 // Shield-Routen (Login, Logout usw.)
