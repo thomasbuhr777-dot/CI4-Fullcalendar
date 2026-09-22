@@ -1,3 +1,4 @@
+@import "bootstrap-icons/font/bootstrap-icons.css";
 body {
     background: #f4f6f9;
 }
@@ -17,4 +18,41 @@ body {
 
 .nav-pills .nav-link.active {
     background-color: #0d6efd;
+}
+
+/* ==========================================================
+   Tommy Edition FAB
+   ========================================================== */
+
+#newEventFab {
+
+    position: fixed;
+
+    bottom: 30px;
+    right: 30px;
+
+    width: 64px;
+    height: 64px;
+
+    border-radius: 50%;
+
+    font-size: 1.8rem;
+
+    z-index: 1050;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all .25s ease;
+
+}
+
+#newEventFab:hover {
+
+    transform: translateY(-4px) scale(1.05);
+
+    box-shadow:
+        0 .75rem 1.5rem rgba(0,0,0,.25);
+
 }

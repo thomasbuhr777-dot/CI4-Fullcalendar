@@ -26,7 +26,16 @@
 
     </div>
 </div>
+<!-- Tommy Edition Floating Action Button -->
+<button
+    id="newEventFab"
+    class="btn btn-primary rounded-circle shadow-lg"
+    type="button"
+    title="Neuer Termin">
 
+    <i class="bi bi-plus-lg"></i>
+
+</button>
 <?= $this->renderSection('scripts') ?>
 
 </body>

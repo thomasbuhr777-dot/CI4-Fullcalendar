@@ -40,6 +40,40 @@ const ui = {
     modalTitle: document.querySelector('#eventModal .modal-title')
 };
 
+// Floating Action Button
+const fab = document.getElementById('newEventFab');
+
+if (fab) {
+
+    fab.addEventListener('click', () => {
+
+        ui.form.reset();
+
+        ui.id.value = '';
+
+        ui.modalTitle.textContent = 'Neuer Termin';
+
+        ui.deleteButton.style.display = 'none';
+
+        const start = new Date();
+        start.setHours(9,0,0,0);
+
+        const end = new Date(start);
+        end.setHours(10);
+
+        ui.start.value = toInput(start);
+        ui.end.value = toInput(end);
+
+        ui.allDay.checked = true;
+
+        toggleAllDayMode();
+
+        modal.show();
+
+    });
+
+}
+
 // -------------------------------------------------------------
 // Konstanten
 // -------------------------------------------------------------
