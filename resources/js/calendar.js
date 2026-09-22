@@ -10,6 +10,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
 import { Modal } from 'bootstrap';
+import { showToast } from './toast';
 
 // -------------------------------------------------------------
 // Kalender vorhanden?
@@ -232,7 +233,7 @@ const calendar = new Calendar(calendarEl, {
 
         failure(error) {
             console.error(error);
-            alert('Termine konnten nicht geladen werden.');
+            showToast('Termine konnten nicht geladen werden.', 'danger');
         }
     },
 
@@ -315,7 +316,7 @@ const calendar = new Calendar(calendarEl, {
 
                 console.error(error);
 
-                alert('Termin konnte nicht geladen werden.');
+                showToast('Termin konnte nicht geladen werden.', 'danger');
 
             });
 
@@ -360,7 +361,7 @@ async function saveMove(info) {
 
             info.revert();
 
-            alert('Termin konnte nicht gespeichert werden.');
+            showToast('Termin konnte nicht gespeichert werden.', 'danger');
 
         }
 
@@ -370,7 +371,7 @@ async function saveMove(info) {
 
         info.revert();
 
-        alert('Serverfehler.');
+        showToast('Serverfehler beim Speichern.', 'danger');
 
     }
 
@@ -399,14 +400,13 @@ ui.form.addEventListener('submit', async (e) => {
         const json = await api.save(ui.id.value, data);
 
         if (json.success) {
-
             modal.hide();
-
             calendar.refetchEvents();
+            showToast('Termin gespeichert.');
 
         } else {
 
-            alert('Termin konnte nicht gespeichert werden.');
+            showToast('Termin konnte nicht gespeichert werden.', 'danger');
 
         }
 
@@ -414,7 +414,7 @@ ui.form.addEventListener('submit', async (e) => {
 
         console.error(error);
 
-        alert('Serverfehler beim Speichern.');
+        showToast('Serverfehler beim Speichern.', 'danger');
 
     }
 
@@ -439,10 +439,11 @@ ui.deleteButton.addEventListener('click', async () => {
             modal.hide();
 
             calendar.refetchEvents();
+            showToast('Termin gelöscht.');
 
         } else {
 
-            alert('Termin konnte nicht gelöscht werden.');
+            showToast('Termin konnte nicht gelöscht werden.', 'danger');
 
         }
 
@@ -450,7 +451,7 @@ ui.deleteButton.addEventListener('click', async () => {
 
         console.error(error);
 
-        alert('Serverfehler beim Löschen.');
+        showToast('Serverfehler beim Löschen.', 'danger');
 
     }
 
