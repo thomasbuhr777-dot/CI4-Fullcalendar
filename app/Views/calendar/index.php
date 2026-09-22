@@ -6,7 +6,39 @@
 
     <div class="card-body">
 
-        <h3>Kalender</h3>
+    <div class="calendar-header mb-4">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <div class="d-flex align-items-center gap-3">
+
+            <div class="calendar-logo">
+
+                <i class="bi bi-calendar3"></i>
+
+            </div>
+
+            <div>
+
+                <div class="calendar-subtitle">
+                    Tommy Edition
+                </div>
+
+                <h1 class="calendar-title mb-0">
+                    Kalender
+                </h1>
+
+            </div>
+
+        </div>
+
+        <span class="badge rounded-pill text-bg-primary px-3 py-2">
+            v0.8.3
+        </span>
+
+    </div>
+
+</div>
 
         <div id="calendar"></div>
 
