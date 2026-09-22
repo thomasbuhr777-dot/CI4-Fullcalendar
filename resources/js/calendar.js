@@ -491,10 +491,18 @@ ui.deleteButton.addEventListener('click', async () => {
 
     } catch (error) {
 
+        hideLoading();
         console.error(error);
+
 
         showToast('Serverfehler beim Löschen.', 'danger');
 
     }
+
+    showLoading('Speichere Termin...');
+
+const json = await api.save(ui.id.value, data);
+
+hideLoading();
 
 });
