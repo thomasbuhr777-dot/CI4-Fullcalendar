@@ -234,33 +234,46 @@ const calendar = new Calendar(calendarEl, {
     },
 
     // Monatsansicht: 09:00–10:00 Titel
-    eventContent(arg) {
+eventContent(info) {
 
-        if (arg.view.type === 'dayGridMonth' && !arg.event.allDay) {
+    const wrapper = document.createElement('div');
 
-            const start = formatTime(arg.event.start);
-            const end = arg.event.end
-                ? formatTime(arg.event.end)
-                : '';
+    wrapper.className = 'fc-tommy-event';
 
-            return {
-                html: `
-                    <div class="fc-event-main-frame">
-                        <span class="fc-time-range">
-                            ${start}${end ? `–${end}` : ''}
-                        </span>
-                        <span class="fc-title">
-                            ${arg.event.title}
-                        </span>
-                    </div>
-                `
-            };
+    const time = document.createElement('div');
+    time.className = 'fc-tommy-time';
 
-        }
+    if (!info.event.allDay) {
 
-        return true;
+        const start = info.event.start.toLocaleTimeString('de-DE', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
-    },
+        const end = info.event.end
+            ? info.event.end.toLocaleTimeString('de-DE', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+              })
+            : '';
+
+        time.textContent = `${start}${end ? '–' + end : ''}`;
+
+    } else {
+
+        time.textContent = 'Ganztägig';
+
+    }
+
+    const title = document.createElement('div');
+    title.className = 'fc-tommy-title';
+    title.textContent = info.event.title;
+
+    wrapper.append(time, title);
+
+    return { domNodes: [wrapper] };
+
+},
 
     selectable: true,
     editable: true,
