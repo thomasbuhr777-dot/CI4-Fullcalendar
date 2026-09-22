@@ -1,3 +1,9 @@
+// =============================================================
+// Tommy Edition v0.8
+// FullCalendar + Bootstrap + CodeIgniter 4
+// Referenzdatei
+// =============================================================
+
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -5,288 +11,447 @@ import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
 import { Modal } from 'bootstrap';
 
+// -------------------------------------------------------------
+// Kalender vorhanden?
+// -------------------------------------------------------------
+
 const calendarEl = document.getElementById('calendar');
 
-if (calendarEl) {
+if (!calendarEl) {
+    throw new Error('Kalender-Element #calendar wurde nicht gefunden.');
+}
 
-    // ------------------------------------------------------
-    // Bootstrap Modal
-    // ------------------------------------------------------
+// -------------------------------------------------------------
+// Bootstrap Modal
+// -------------------------------------------------------------
 
-    const modal = new Modal(document.getElementById('eventModal'));
+const modal = new Modal(document.getElementById('eventModal'));
 
-    const form = document.getElementById('eventForm');
+const ui = {
+    form: document.getElementById('eventForm'),
+    id: document.getElementById('eventId'),
+    title: document.getElementById('eventTitle'),
+    description: document.getElementById('eventDescription'),
+    start: document.getElementById('eventStart'),
+    end: document.getElementById('eventEnd'),
+    allDay: document.getElementById('eventAllDay'),
+    deleteButton: document.getElementById('deleteEvent'),
+    modalTitle: document.querySelector('#eventModal .modal-title')
+};
 
-    const eventId = document.getElementById('eventId');
-    const eventTitle = document.getElementById('eventTitle');
-    const eventDescription = document.getElementById('eventDescription');
-    const eventStart = document.getElementById('eventStart');
-    const eventEnd = document.getElementById('eventEnd');
-    const eventAllDay = document.getElementById('eventAllDay');
-    const deleteButton = document.getElementById('deleteEvent');
-    const modalTitle = document.querySelector('#eventModal .modal-title');
+// -------------------------------------------------------------
+// Konstanten
+// -------------------------------------------------------------
 
-    // ------------------------------------------------------
-    // Hilfsfunktionen
-    // ------------------------------------------------------
+const DEFAULT_START_HOUR = 9;
+const DEFAULT_DURATION_MINUTES = 60;
 
-    const pad = (n) => String(n).padStart(2, '0');
+// -------------------------------------------------------------
+// Datums-Helfer
+// -------------------------------------------------------------
 
-    function toInput(date) {
-        return (
-            `${date.getFullYear()}-` +
-            `${pad(date.getMonth() + 1)}-` +
-            `${pad(date.getDate())}T` +
-            `${pad(date.getHours())}:` +
-            `${pad(date.getMinutes())}`
-        );
+const pad = (n) => String(n).padStart(2, '0');
+
+function toInput(date) {
+    return (
+        `${date.getFullYear()}-` +
+        `${pad(date.getMonth() + 1)}-` +
+        `${pad(date.getDate())}T` +
+        `${pad(date.getHours())}:` +
+        `${pad(date.getMinutes())}`
+    );
+}
+
+function fromApi(value) {
+    return value ? value.substring(0, 16) : '';
+}
+
+function formatTime(date) {
+    return date.toLocaleTimeString('de-DE', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// -------------------------------------------------------------
+// Ganztägig umschalten
+// -------------------------------------------------------------
+
+let rememberedStartTime = '09:00';
+let rememberedEndTime = '10:00';
+
+function toggleAllDayMode() {
+
+    const isAllDay = ui.allDay.checked;
+
+    if (isAllDay) {
+
+        rememberedStartTime = ui.start.value.substring(11, 16) || '09:00';
+        rememberedEndTime = ui.end.value.substring(11, 16) || '10:00';
+
+        ui.start.disabled = true;
+        ui.end.disabled = true;
+
+    } else {
+
+        ui.start.disabled = false;
+        ui.end.disabled = false;
+
     }
 
-    function fromApi(value) {
-        if (!value) return '';
-        return value.substring(0, 16);
+}
+
+ui.allDay.addEventListener('change', toggleAllDayMode);
+
+// -------------------------------------------------------------
+// API-Helfer
+// -------------------------------------------------------------
+
+const api = {
+
+    async get(id) {
+        return fetch(`/api/events/${id}`).then(r => r.json());
+    },
+
+    async save(id, data) {
+
+        const url = id
+            ? `/api/events/${id}`
+            : '/api/events';
+
+        return fetch(url, {
+            method: 'POST',
+            body: data
+        }).then(r => r.json());
+
+    },
+
+    async remove(id) {
+
+        return fetch(`/api/events/${id}`, {
+            method: 'DELETE'
+        }).then(r => r.json());
+
+    },
+
+    async move(id, start, end) {
+
+        const data = new FormData();
+
+        data.append('start', start);
+
+        if (end) {
+            data.append('end', end);
+        }
+
+        return fetch(`/api/events/${id}/move`, {
+            method: 'POST',
+            body: data
+        }).then(r => r.json());
+
     }
 
-    // Uhrzeiten merken, wenn auf Ganztägig gewechselt wird.
-    let rememberedStartTime = '09:00';
-    let rememberedEndTime = '10:00';
+};
 
-    function toggleAllDayMode() {
+// -------------------------------------------------------------
+// FullCalendar
+// -------------------------------------------------------------
 
-        const isAllDay = eventAllDay.checked;
+const calendar = new Calendar(calendarEl, {
 
-        if (isAllDay) {
+    plugins: [
+        dayGridPlugin,
+        timeGridPlugin,
+        interactionPlugin
+    ],
 
-            rememberedStartTime = eventStart.value.substring(11, 16) || '09:00';
-            rememberedEndTime = eventEnd.value.substring(11, 16) || '10:00';
+    locale: deLocale,
 
-            eventStart.value = eventStart.value.substring(0, 10) + 'T00:00';
-            eventEnd.value = eventEnd.value.substring(0, 10) + 'T23:59';
+    initialView: 'dayGridMonth',
 
-            eventStart.disabled = true;
-            eventEnd.disabled = true;
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+
+    buttonText: {
+        today: 'Heute',
+        month: 'Monat',
+        week: 'Woche',
+        day: 'Tag'
+    },
+
+    displayEventTime: true,
+
+    eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    },
+
+    // Monatsansicht: 09:00–10:00 Titel
+    eventContent(arg) {
+
+        if (arg.view.type === 'dayGridMonth' && !arg.event.allDay) {
+
+            const start = formatTime(arg.event.start);
+            const end = arg.event.end
+                ? formatTime(arg.event.end)
+                : '';
+
+            return {
+                html: `
+                    <div class="fc-event-main-frame">
+                        <span class="fc-time-range">
+                            ${start}${end ? `–${end}` : ''}
+                        </span>
+                        <span class="fc-title">
+                            ${arg.event.title}
+                        </span>
+                    </div>
+                `
+            };
+
+        }
+
+        return true;
+
+    },
+
+    selectable: true,
+    editable: true,
+
+    // ---------------------------------------------------------
+    // Termine laden
+    // ---------------------------------------------------------
+
+    events: {
+        url: '/api/events',
+        method: 'GET',
+
+        failure(error) {
+            console.error(error);
+            alert('Termine konnten nicht geladen werden.');
+        }
+    },
+
+    // ---------------------------------------------------------
+    // Neuer Termin
+    // ---------------------------------------------------------
+
+    dateClick(info) {
+
+        ui.form.reset();
+
+        ui.id.value = '';
+
+        ui.modalTitle.textContent = 'Neuer Termin';
+
+        ui.deleteButton.style.display = 'none';
+
+        ui.start.disabled = false;
+        ui.end.disabled = false;
+
+        const start = new Date(info.date);
+        const end = new Date(info.date);
+
+        if (info.allDay) {
+
+            start.setHours(DEFAULT_START_HOUR, 0, 0, 0);
+
+            end.setHours(DEFAULT_START_HOUR + 1, 0, 0, 0);
+
+            ui.allDay.checked = true;
 
         } else {
 
-            eventStart.disabled = false;
-            eventEnd.disabled = false;
+            end.setMinutes(end.getMinutes() + DEFAULT_DURATION_MINUTES);
 
-            eventStart.value =
-                eventStart.value.substring(0, 10) + 'T' + rememberedStartTime;
+            ui.allDay.checked = false;
 
-            eventEnd.value =
-                eventEnd.value.substring(0, 10) + 'T' + rememberedEndTime;
         }
+
+        ui.start.value = toInput(start);
+        ui.end.value = toInput(end);
+
+        toggleAllDayMode();
+
+        modal.show();
+
+    },
+
+    // ---------------------------------------------------------
+    // Termin bearbeiten
+    // ---------------------------------------------------------
+
+    eventClick(info) {
+
+        api.get(info.event.id)
+            .then(event => {
+
+                ui.modalTitle.textContent = 'Termin bearbeiten';
+
+                ui.id.value = event.id;
+                ui.title.value = event.title;
+                ui.description.value = event.description ?? '';
+
+                ui.start.disabled = false;
+                ui.end.disabled = false;
+
+                ui.start.value = fromApi(event.start);
+                ui.end.value = fromApi(event.end);
+
+                ui.allDay.checked = Boolean(Number(event.all_day));
+
+                toggleAllDayMode();
+
+                ui.deleteButton.style.display = '';
+
+                modal.show();
+
+            })
+            .catch(error => {
+
+                console.error(error);
+
+                alert('Termin konnte nicht geladen werden.');
+
+            });
+
+    },
+
+    // ---------------------------------------------------------
+    // Drag & Drop
+    // ---------------------------------------------------------
+
+    eventDrop(info) {
+        saveMove(info);
+    },
+
+    // ---------------------------------------------------------
+    // Resize
+    // ---------------------------------------------------------
+
+    eventResize(info) {
+        saveMove(info);
     }
 
-    eventAllDay.addEventListener('change', toggleAllDayMode);
+});
 
-    // ------------------------------------------------------
-    // FullCalendar
-    // ------------------------------------------------------
+// Kalender anzeigen
+calendar.render();
 
-    const calendar = new Calendar(calendarEl, {
+// -------------------------------------------------------------
+// Drag & Drop speichern
+// -------------------------------------------------------------
 
-        plugins: [
-            dayGridPlugin,
-            timeGridPlugin,
-            interactionPlugin,
-        ],
+async function saveMove(info) {
 
-        locale: deLocale,
+    try {
 
-        initialView: 'dayGridMonth',
+        const json = await api.move(
+            info.event.id,
+            toInput(info.event.start),
+            info.event.end ? toInput(info.event.end) : ''
+        );
 
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
-        },
+        if (!json.success) {
 
-        buttonText: {
-            today: 'Heute',
-            month: 'Monat',
-            week: 'Woche',
-            day: 'Tag',
-        },
+            info.revert();
 
-        selectable: true,
-        editable: true,
-
-        events: {
-            url: '/api/events',
-            method: 'GET',
-
-            failure(error) {
-                console.error(error);
-                alert('Termine konnten nicht geladen werden.');
-            },
-        },
-
-        // --------------------------------------------------
-        // Neuer Termin
-        // --------------------------------------------------
-
-        dateClick(info) {
-
-            form.reset();
-
-            eventId.value = '';
-
-            modalTitle.textContent = 'Neuer Termin';
-
-            deleteButton.style.display = 'none';
-
-            eventStart.disabled = false;
-            eventEnd.disabled = false;
-
-            const start = new Date(info.date);
-            const end = new Date(info.date);
-
-            if (info.allDay) {
-                start.setHours(9, 0, 0, 0);
-                end.setHours(10, 0, 0, 0);
-            } else {
-                end.setHours(end.getHours() + 1);
-            }
-
-            eventStart.value = toInput(start);
-            eventEnd.value = toInput(end);
-
-            eventAllDay.checked = info.allDay;
-
-            toggleAllDayMode();
-
-            modal.show();
-        },
-
-        // --------------------------------------------------
-        // Termin bearbeiten
-        // --------------------------------------------------
-
-        eventClick(info) {
-
-            fetch(`/api/events/${info.event.id}`)
-                .then((response) => response.json())
-                .then((event) => {
-
-                    modalTitle.textContent = 'Termin bearbeiten';
-
-                    eventId.value = event.id;
-                    eventTitle.value = event.title;
-                    eventDescription.value = event.description ?? '';
-
-                    eventStart.disabled = false;
-                    eventEnd.disabled = false;
-
-                    eventStart.value = fromApi(event.start);
-                    eventEnd.value = fromApi(event.end);
-
-                    eventAllDay.checked = Boolean(Number(event.all_day));
-
-                    toggleAllDayMode();
-
-                    deleteButton.style.display = '';
-
-                    modal.show();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    alert('Termin konnte nicht geladen werden.');
-                });
-        },
-
-    });
-
-    calendar.render();
-
-    // ------------------------------------------------------
-    // Speichern
-    // ------------------------------------------------------
-
-    form.addEventListener('submit', async (e) => {
-
-        e.preventDefault();
-
-        const url = eventId.value
-            ? `/api/events/${eventId.value}`
-            : '/api/events';
-
-        const data = new FormData(form);
-
-        // Deaktivierte Felder werden nicht übertragen
-        if (eventStart.disabled) data.set('start', eventStart.value);
-        if (eventEnd.disabled) data.set('end', eventEnd.value);
-
-        try {
-
-            const response = await fetch(url, {
-                method: 'POST',
-                body: data,
-            });
-
-            const json = await response.json();
-
-            if (json.success) {
-
-                modal.hide();
-
-                calendar.refetchEvents();
-
-            } else {
-
-                alert('Termin konnte nicht gespeichert werden.');
-
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert('Serverfehler beim Speichern.');
+            alert('Termin konnte nicht gespeichert werden.');
 
         }
 
-    });
+    } catch (error) {
 
-    // ------------------------------------------------------
-    // Löschen
-    // ------------------------------------------------------
+        console.error(error);
 
-    deleteButton.addEventListener('click', async () => {
+        info.revert();
 
-        if (!eventId.value) return;
+        alert('Serverfehler.');
 
-        if (!confirm('Termin wirklich löschen?')) return;
-
-        try {
-
-            const response = await fetch(`/api/events/${eventId.value}`, {
-                method: 'DELETE',
-            });
-
-            const json = await response.json();
-
-            if (json.success) {
-
-                modal.hide();
-
-                calendar.refetchEvents();
-
-            } else {
-
-                alert('Termin konnte nicht gelöscht werden.');
-
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert('Serverfehler beim Löschen.');
-
-        }
-
-    });
+    }
 
 }
+
+// -------------------------------------------------------------
+// Formular speichern
+// -------------------------------------------------------------
+
+ui.form.addEventListener('submit', async (e) => {
+
+    e.preventDefault();
+
+    const data = new FormData(ui.form);
+
+    if (ui.start.disabled) {
+        data.set('start', ui.start.value);
+    }
+
+    if (ui.end.disabled) {
+        data.set('end', ui.end.value);
+    }
+
+    try {
+
+        const json = await api.save(ui.id.value, data);
+
+        if (json.success) {
+
+            modal.hide();
+
+            calendar.refetchEvents();
+
+        } else {
+
+            alert('Termin konnte nicht gespeichert werden.');
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert('Serverfehler beim Speichern.');
+
+    }
+
+});
+
+// -------------------------------------------------------------
+// Termin löschen
+// -------------------------------------------------------------
+
+ui.deleteButton.addEventListener('click', async () => {
+
+    if (!ui.id.value) return;
+
+    if (!confirm('Termin wirklich löschen?')) return;
+
+    try {
+
+        const json = await api.remove(ui.id.value);
+
+        if (json.success) {
+
+            modal.hide();
+
+            calendar.refetchEvents();
+
+        } else {
+
+            alert('Termin konnte nicht gelöscht werden.');
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert('Serverfehler beim Löschen.');
+
+    }
+
+});
