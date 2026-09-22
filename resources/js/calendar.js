@@ -116,16 +116,24 @@ const api = {
 
     async save(id, data) {
 
-        const url = id
-            ? `/api/events/${id}`
-            : '/api/events';
+    const url = id ? `/api/events/${id}` : '/api/events';
 
-        return fetch(url, {
-            method: 'POST',
-            body: data
-        }).then(r => r.json());
+    const response = await fetch(url, {
+        method: 'POST',
+        body: data
+    });
 
-    },
+    console.log('HTTP Status:', response.status);
+
+    const text = await response.text();
+    console.log('Server Response:', text);
+
+    if (!response.ok) {
+        throw new Error(text);
+    }
+
+    return JSON.parse(text);
+},
 
     async remove(id) {
 
