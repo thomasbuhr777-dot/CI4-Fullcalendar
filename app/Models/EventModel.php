@@ -38,4 +38,23 @@ class EventModel extends Model
             ->orderBy('events.start', 'ASC')
             ->findAll();
     }
+
+    public function findTenantEvent(int $tenantId, int $id): ?array
+{
+    return $this->where('tenant_id', $tenantId)
+                ->find($id);
+}
+
+public function updateTenantEvent(int $tenantId, int $id, array $data): bool
+{
+    return $this->where('tenant_id', $tenantId)
+                ->set($data)
+                ->update($id);
+}
+
+public function deleteTenantEvent(int $tenantId, int $id): bool
+{
+    return $this->where('tenant_id', $tenantId)
+                ->delete($id);
+}
 }

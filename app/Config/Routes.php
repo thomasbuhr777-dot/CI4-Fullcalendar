@@ -12,8 +12,12 @@ $routes->get('calendar', 'Calendar::index', ['filter' => 'session']);
 
 $routes->group('api', ['filter' => 'session'], static function ($routes) {
 
-    $routes->get('events', 'Api\Event::index');
-     $routes->post('events', 'Api\Event::create');
+   $routes->get('events', 'Api\Event::index');
+   $routes->post('events', 'Api\Event::create');
+
+   $routes->get('events/(:num)', 'Api\Event::show/$1');
+   $routes->post('events/(:num)', 'Api\Event::update/$1');
+   $routes->delete('events/(:num)', 'Api\Event::delete/$1');
 
 });
 

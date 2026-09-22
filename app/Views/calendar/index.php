@@ -36,7 +36,9 @@
                     <input id="eventDate"
                            name="start"
                            type="hidden">
-
+                        <input id="eventId"
+       name="id"
+       type="hidden">
                     <div class="mb-3">
                         <label class="form-label">Titel</label>
 
@@ -47,6 +49,45 @@
                             required
                             type="text">
                     </div>
+
+                    <div class="row">
+
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Beginn</label>
+
+        <input
+            class="form-control"
+            id="eventStart"
+            name="start"
+            type="datetime-local"
+            required>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Ende</label>
+
+        <input
+            class="form-control"
+            id="eventEnd"
+            name="end"
+            type="datetime-local">
+    </div>
+
+</div>
+
+<div class="form-check mb-3">
+
+    <input
+        class="form-check-input"
+        id="eventAllDay"
+        name="all_day"
+        type="checkbox">
+
+    <label class="form-check-label" for="eventAllDay">
+        Ganztägiger Termin
+    </label>
+
+</div>
 
                     <div class="mb-3">
                         <label class="form-label">Beschreibung</label>
@@ -67,6 +108,15 @@
                             type="button">
                         Abbrechen
                     </button>
+                    <button
+    class="btn btn-danger me-auto"
+    id="deleteEvent"
+    style="display:none"
+    type="button">
+
+    Löschen
+
+</button>
 
                     <button class="btn btn-primary"
                             type="submit">

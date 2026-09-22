@@ -53,31 +53,49 @@ public function create()
             ->setJSON(['success' => false]);
     }
 
-    $calendarId = db_connect()
+    // Hauptkalender des Mandanten holen
+    $calendar = db_connect()
         ->table('calendars')
         ->where('tenant_id', $tenantId)
         ->orderBy('id')
         ->get()
-        ->getRowArray()['id'];
+        ->getRowArray();
 
-    $userId = auth()->id();
+    if (! $calendar) {
+        return $this->response
+            ->setStatusCode(500)
+            ->setJSON([
+                'success' => false,
+                'message' => 'Kein Kalender gefunden.',
+            ]);
+    }
 
-    $model = new EventModel();
+    // HTML datetime-local → MySQL DATETIME
+    $start = $this->request->getPost('start');
+    $end   = $this->request->getPost('end');
+
+    $start = $start ? str_replace('T', ' ', $start) . ':00' : null;
+    $end   = $end ? str_replace('T', ' ', $end) . ':00' : null;
+
+    // Checkbox liefert nur einen Wert, wenn sie angehakt ist
+    $allDay = $this->request->getPost('all_day') ? 1 : 0;
+
+    $model = new \App\Models\EventModel();
 
     $id = $model->insert([
         'tenant_id'   => $tenantId,
-        'calendar_id' => $calendarId,
+        'calendar_id' => $calendar['id'],
         'category_id' => null,
 
         'title'       => $this->request->getPost('title'),
         'description' => $this->request->getPost('description'),
 
-        'start'       => $this->request->getPost('start'),
-        'end'         => $this->request->getPost('start'),
+        'start'       => $start,
+        'end'         => $end,
 
-        'all_day'     => 1,
+        'all_day'     => $allDay,
 
-        'created_by'  => $userId,
+        'created_by'  => auth()->id(),
     ]);
 
     return $this->response->setJSON([
@@ -85,4 +103,62 @@ public function create()
         'id'      => $id,
     ]);
 }
+
+public function show($id)
+{
+    $event = (new EventModel())
+        ->findTenantEvent(service('tenant')->id(), (int)$id);
+
+    return $this->response->setJSON($event ?? []);
+}
+
+public function update($id)
+{
+    $model = new EventModel();
+
+    $ok = $model->updateTenantEvent(
+        service('tenant')->id(),
+        (int)$id,
+        [
+            'title'       => $this->request->getPost('title'),
+            'description' => $this->request->getPost('description'),
+            'start'   => $this->request->getPost('start'), 
+            'end'=> $this->request->getPost('end'),
+            'all_day' => (bool) $this->request->getPost('all_day'),
+        ]
+    );
+
+    return $this->response->setJSON([
+        'success' => $ok
+    ]);
+}
+
+public function delete($id)
+{
+    $tenantId = service('tenant')->id();
+
+    if ($tenantId === null) {
+        return $this->response
+            ->setStatusCode(403)
+            ->setJSON(['success' => false]);
+    }
+
+    $model = new EventModel();
+
+    // Erst prüfen, ob der Termin zum Mandanten gehört
+    $event = $model->findTenantEvent($tenantId, (int) $id);
+
+    if (! $event) {
+        return $this->response
+            ->setStatusCode(404)
+            ->setJSON(['success' => false]);
+    }
+
+    $model->delete($id);
+
+    return $this->response->setJSON([
+        'success' => true,
+    ]);
+}
+
 }
