@@ -118,26 +118,6 @@ body {
 
 }
 
-.fc-event {
-
-    cursor: pointer;
-
-    border-radius: 8px;
-
-    transition:
-        transform .15s ease,
-        box-shadow .15s ease;
-
-}
-
-.fc-event:hover {
-
-    transform: translateY(-2px);
-
-    box-shadow: 0 8px 18px rgba(0,0,0,.18);
-
-}
-
 /* ==========================================================
    Tommy Edition Event Polish v0.8.3
    ========================================================== */
@@ -251,8 +231,6 @@ body {
 
 }
 
-
-
 /* ==========================================================
    Tommy Edition Toolbar v0.8.3.1
    ========================================================== */
@@ -271,11 +249,7 @@ body {
     color: #1F2937;
 }
 
-/* Button-Gruppen */
 
-.fc-button-group {
-    gap: 6px;
-}
 
 /* Alle Buttons */
 
@@ -455,18 +429,7 @@ body {
 
 }
 
-.calendar-switch {
-    padding: .7rem .6rem;
-}
 
-.calendar-color {
-    width: 14px;
-    height: 14px;
-}
-
-.calendar-switch:hover {
-    background: #F3F4F6;
-}
 
 .calendar-switch input[type="checkbox"] {
     margin-top: 1px;
@@ -563,8 +526,55 @@ body {
 
 }
 
-.calendar-header {
 
-    border-bottom: 1px solid #F1F5F9;
 
+.fc-day-sat,
+.fc-day-sun {
+    background: #FCFCFD;
+}
+
+.fc-daygrid-day-number {
+    padding: 6px 8px;
+}
+
+.fc-tommy-time {
+    margin-bottom: 2px;
+}
+
+@keyframes todayPulse {
+    0%   { transform: scale(0.9); }
+    50%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+.fc-day-today .fc-daygrid-day-number {
+    animation: todayPulse .25s ease;
+}
+
+.fc-header-toolbar {
+    align-items: center !important;
+}
+
+.fc-toolbar-title {
+    margin: 0 !important;
+    line-height: 38px;
+}
+
+.calendar-header .badge {
+    background: #EFF6FF !important;
+    color: #2563EB !important;
+    border: 1px solid #BFDBFE;
+    font-weight: 600;
+}
+
+.nav-link.active {
+    background: #EFF6FF;
+    color: #2563EB !important;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.nav-link {
+    border-radius: 10px;
+    padding: .65rem .75rem;
 }
