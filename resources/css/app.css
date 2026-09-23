@@ -219,26 +219,27 @@ body {
 
 }
 
+/* Tommy Edition – Heute-Kreis perfekt zentriert */
+
 .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
 
-    background: #2563EB;
-
-    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     width: 32px;
-
     height: 32px;
 
-    line-height: 32px;
+    margin: 4px 4px 0 auto;
 
-    text-align: center;
+    background: #2563EB;
+    color: #FFFFFF !important;
 
     border-radius: 50%;
 
-    margin: 4px;
-
-    font-weight: bold;
-
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
 }
 
 /* Wochenende etwas heller */
@@ -369,4 +370,117 @@ body {
 
     letter-spacing: -.02em;
 
+}
+
+/* ==========================================================
+   Tommy Edition Sidebar
+   ========================================================== */
+
+.calendar-sidebar {
+
+    background: #FFFFFF;
+
+    border: 1px solid #E5E7EB;
+
+    border-radius: 16px;
+
+    padding: 1rem;
+
+    margin-bottom: 1rem;
+
+}
+
+.sidebar-title {
+
+    font-size: .8rem;
+
+    text-transform: uppercase;
+
+    letter-spacing: .08em;
+
+    color: #6B7280;
+
+    margin-bottom: 1rem;
+
+    font-weight: 600;
+
+}
+
+.calendar-switch {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: .75rem;
+
+    padding: .55rem .35rem;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    transition: background .15s ease;
+
+}
+
+.calendar-switch:hover {
+
+    background: #F9FAFB;
+
+}
+
+.calendar-switch input {
+
+    margin: 0;
+
+}
+
+.calendar-color {
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+
+}
+
+.calendar-name {
+
+    font-size: .95rem;
+
+    color: #374151;
+
+}
+
+.calendar-switch {
+    padding: .7rem .6rem;
+}
+
+.calendar-color {
+    width: 14px;
+    height: 14px;
+}
+
+.calendar-switch:hover {
+    background: #F3F4F6;
+}
+
+.calendar-switch input[type="checkbox"] {
+    margin-top: 1px;
+}
+
+.calendar-sidebar {
+    box-shadow: 0 4px 10px rgba(0,0,0,.04);
+}
+
+.fc .fc-button {
+    min-height: 38px;
+    padding: .5rem .95rem !important;
+}
+
+.fc-button-group {
+    gap: 4px;
 }
