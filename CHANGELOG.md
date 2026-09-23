@@ -38,3 +38,16 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ### Changed
 - Modal kann direkt über den FAB geöffnet werden.
+
+## v0.8.4 — Calendar Colors (Work in Progress)
+
+### Added
+- Neues `CalendarModel` für die Tabelle `calendars`.
+- Tenant-Helfer `forTenant()` und `defaultCalendar()`.
+
+### Changed
+- `EventModel::calendarEvents()` liefert jetzt Kalendername und Kalenderfarbe.
+- FullCalendar erhält `backgroundColor`, `borderColor` und `textColor` direkt aus der API.
+
+### Internal
+- Vorbereitung für mehrere Kalender mit individuellen Farben.

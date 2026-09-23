@@ -44,5 +44,11 @@ abstract class BaseController extends Controller
 
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
+
+        // Tommy Edition: Default Tenant laden
+if (! session()->has('tenant_id')) {
+    session()->set('tenant_id', 1);
+    session()->set('tenant_name', 'Tommy Edition');
+}
     }
 }

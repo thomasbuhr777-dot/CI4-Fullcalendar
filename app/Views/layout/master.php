@@ -18,7 +18,7 @@
 <div class="container-fluid">
     <div class="row">
 
-        <?= $this->include('layout/sidebar') ?>
+       <?= $this->include('layout/sidebar', ['calendars' => $calendars ?? []]) ?>
 
         <main class="col-md-10 py-4 px-4">
             <?= $this->renderSection('content') ?>

@@ -1,46 +1,55 @@
-<nav class="col-md-2 d-none d-md-block bg-white border-end vh-100 p-3">
+<?php
 
-    <h6 class="text-uppercase text-muted mb-3">Navigation</h6>
 
-    <ul class="nav nav-pills flex-column gap-2">
 
-        <li class="nav-item">
-            <a class="nav-link" href="<?= site_url('dashboard') ?>">
-                🏠 Dashboard
-            </a>
-        </li>
+?>
 
-        <li class="nav-item">
-            <a class="nav-link" href="<?= site_url('calendar') ?>">
-                📅 Kalender
-            </a>
-        </li>
+<aside class="col-md-2 bg-light border-end min-vh-100 py-4 px-3">
 
-        <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-                🎨 Kategorien
-            </a>
-        </li>
+    <nav class="nav flex-column mb-4">
 
-        <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-                👥 Benutzer
-            </a>
-        </li>
+        <a class="nav-link" href="<?= site_url('dashboard') ?>">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+        </a>
 
-        <li class="nav-item">
-            <a class="nav-link disabled" href="#">
-                ⚙️ Einstellungen
-            </a>
-        </li>
+        <a class="nav-link active" href="<?= site_url('calendar') ?>">
+            <i class="bi bi-calendar3 me-2"></i>
+            Kalender
+        </a>
 
-    </ul>
+    </nav>
+
+<?php if (!empty($calendars)): ?>
 
     <hr>
 
-    <small class="text-muted">
-        Mandant:<br>
-        <strong><?= esc(session('tenant_name') ?? '-') ?></strong>
-    </small>
+    <div class="calendar-sidebar">
+        <div class="sidebar-title">Meine Kalender</div>
 
-</nav>
+        <?php foreach ($calendars as $calendar): ?>
+            <label class="calendar-switch">
+
+                <input
+                    type="checkbox"
+                    class="calendar-filter"
+                    value="<?= $calendar['id'] ?>"
+                    checked>
+
+                <span
+                    class="calendar-color"
+                    style="background: <?= esc($calendar['color']) ?>">
+                </span>
+
+                <span class="calendar-name">
+                    <?= esc($calendar['name']) ?>
+                </span>
+
+            </label>
+        <?php endforeach; ?>
+
+    </div>
+
+<?php endif; ?>
+
+</aside>
