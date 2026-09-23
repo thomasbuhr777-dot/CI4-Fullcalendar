@@ -40,6 +40,51 @@ const ui = {
     modalTitle: document.querySelector('#eventModal .modal-title')
 };
 
+// ==========================================================
+// Tommy Edition – Kalenderfilter
+// ==========================================================
+
+/*
+const selectedCalendars = new Set();
+
+document.querySelectorAll('.calendar-filter').forEach((checkbox) => {
+    selectedCalendars.add(Number(checkbox.value));
+});
+
+function applyCalendarFilter() {
+
+    calendar.getEvents().forEach((event) => {
+
+        const calendarId = Number(event.extendedProps.calendar_id);
+
+        event.setProp(
+            'display',
+            selectedCalendars.has(calendarId) ? 'auto' : 'none'
+        );
+
+    });
+
+}
+*/
+
+document.querySelectorAll('.calendar-filter').forEach((checkbox) => {
+
+    checkbox.addEventListener('change', () => {
+
+        const id = Number(checkbox.value);
+
+        if (checkbox.checked) {
+            selectedCalendars.add(id);
+        } else {
+            selectedCalendars.delete(id);
+        }
+
+        //applyCalendarFilter();
+
+    });
+
+});
+
 // Floating Action Button
 const fab = document.getElementById('newEventFab');
 
@@ -278,19 +323,21 @@ eventContent(info) {
     selectable: true,
     editable: true,
 
+
+
     // ---------------------------------------------------------
     // Termine laden
     // ---------------------------------------------------------
 
-    events: {
-        url: '/api/events',
-        method: 'GET',
+events: {
+    url: '/api/events',
+    method: 'GET',
 
-        failure(error) {
-            console.error(error);
-            showToast('Termine konnten nicht geladen werden.', 'danger');
-        }
-    },
+    failure(error) {
+        console.error(error);
+        showToast('Termine konnten nicht geladen werden.', 'danger');
+    }
+},
 
     // ---------------------------------------------------------
     // Neuer Termin
@@ -391,12 +438,17 @@ eventContent(info) {
 
     eventResize(info) {
         saveMove(info);
-    }
+    },
 
 });
 
+
+
 // Kalender anzeigen
 calendar.render();
+
+// Initialen Kalenderfilter anwenden
+//applyCalendarFilter();
 
 // -------------------------------------------------------------
 // Drag & Drop speichern
