@@ -578,3 +578,13 @@ body {
     border-radius: 10px;
     padding: .65rem .75rem;
 }
+
+.calendar-add {
+    color: var(--tommy-blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.calendar-add:hover {
+    color: var(--tommy-blue-dark);
+}

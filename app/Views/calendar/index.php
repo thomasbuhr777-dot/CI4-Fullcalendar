@@ -33,7 +33,7 @@
         </div>
 
         <span class="badge rounded-pill text-bg-primary px-3 py-2">
-            v0.8.3
+            v0.9
         </span>
 
     </div>
@@ -158,6 +158,81 @@
                 </div>
 
             </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     Tommy Edition – Kalender Modal
+========================================================== -->
+
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="calendarModalLabel">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    Neuer Kalender
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label for="calendarName" class="form-label">
+                        Kalendername
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="calendarName"
+                        placeholder="z. B. Arbeit">
+                </div>
+
+                <div class="mb-3">
+                    <label for="calendarColor" class="form-label">
+                        Farbe
+                    </label>
+
+                    <input
+                        type="color"
+                        id="calendarColor"
+                        class="form-control form-control-color"
+                        value="#16A34A">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-light"
+                    data-bs-dismiss="modal">
+                    Abbrechen
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="saveCalendarButton">
+                    Kalender anlegen
+                </button>
+
+            </div>
 
         </div>
 

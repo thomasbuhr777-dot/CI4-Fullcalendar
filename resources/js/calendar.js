@@ -621,5 +621,62 @@ modalElement.addEventListener('hidden.bs.modal', () => {
 
 });
 
+const calendarModal = new Modal(
+    document.getElementById('calendarModal')
+);
+
+document
+    .getElementById('newCalendarButton')
+    .addEventListener('click', () => {
+
+        document.getElementById('calendarName').value = '';
+        document.getElementById('calendarColor').value = '#16A34A';
+
+        calendarModal.show();
+
+    });
+
+document
+    .getElementById('saveCalendarButton')
+    .addEventListener('click', async () => {
+
+        const data = new FormData();
+
+        data.append(
+            'name',
+            document.getElementById('calendarName').value
+        );
+
+        data.append(
+            'color',
+            document.getElementById('calendarColor').value
+        );
+
+        const response = await fetch('/api/calendars', {
+            method: 'POST',
+            body: data
+        });
+
+        const json = await response.json();
+
+        if (json.success) {
+
+            calendarModal.hide();
+
+            location.reload();
+
+            showToast('Kalender angelegt.');
+
+        } else {
+
+            showToast(
+                'Kalender konnte nicht angelegt werden.',
+                'danger'
+            );
+
+        }
+
+    });
+
 // Tommy Edition Ready
 console.info('🚀 Tommy Edition Calendar v0.9 Foundation loaded.');

@@ -21,6 +21,8 @@ $routes->group('api', ['filter' => 'session'], static function ($routes) {
 
    $routes->post('events/(:num)/move', 'Api\Event::move/$1');
 
+   $routes->post('calendars', 'Api\Calendar::create');
+
 });
 
 // Shield-Routen (Login, Logout usw.)

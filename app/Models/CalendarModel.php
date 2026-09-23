@@ -38,4 +38,13 @@ class CalendarModel extends Model
                     ->orderBy('id', 'ASC')
                     ->first();
     }
+
+    public function createCalendar(int $tenantId, string $name, string $color): bool
+{
+    return $this->insert([
+        'tenant_id' => $tenantId,
+        'name'      => $name,
+        'color'     => $color,
+    ]);
+}
 }

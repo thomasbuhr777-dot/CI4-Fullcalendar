@@ -47,9 +47,19 @@
 
             </label>
         <?php endforeach; ?>
+        <button
+    class="btn btn-link calendar-add p-0 mt-3"
+    id="newCalendarButton">
+
+    <i class="bi bi-plus-circle me-2"></i>
+    Neuer Kalender
+
+</button>
 
     </div>
 
 <?php endif; ?>
+
+
 
 </aside>
