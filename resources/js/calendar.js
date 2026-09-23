@@ -1,19 +1,35 @@
 // =============================================================
-// Tommy Edition v0.8
+// Tommy Edition v0.9 Foundation
 // FullCalendar + Bootstrap + CodeIgniter 4
-// Referenzdatei
+//
+// Referenzdatei für die Tommy Edition.
+//
+// Sections
+// 01 Imports
+// 02 UI & Modal
+// 03 Utilities
+// 04 API Service
+// 05 FullCalendar
+// 06 CRUD
+// 07 Drag & Drop & Resize
+// 08 Initialisierung
 // =============================================================
+
+// -------------------------------------------------------------
+// 01 Imports
+// -------------------------------------------------------------
 
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
+
 import { Modal } from 'bootstrap';
 import { showToast } from './toast';
 
 // -------------------------------------------------------------
-// Kalender vorhanden?
+// 02 UI & Modal
 // -------------------------------------------------------------
 
 const calendarEl = document.getElementById('calendar');
@@ -21,10 +37,6 @@ const calendarEl = document.getElementById('calendar');
 if (!calendarEl) {
     throw new Error('Kalender-Element #calendar wurde nicht gefunden.');
 }
-
-// -------------------------------------------------------------
-// Bootstrap Modal
-// -------------------------------------------------------------
 
 const modal = new Modal(document.getElementById('eventModal'));
 
@@ -40,99 +52,22 @@ const ui = {
     modalTitle: document.querySelector('#eventModal .modal-title')
 };
 
-// ==========================================================
-// Tommy Edition – Kalenderfilter
-// ==========================================================
-
-/*
-const selectedCalendars = new Set();
-
-document.querySelectorAll('.calendar-filter').forEach((checkbox) => {
-    selectedCalendars.add(Number(checkbox.value));
-});
-
-function applyCalendarFilter() {
-
-    calendar.getEvents().forEach((event) => {
-
-        const calendarId = Number(event.extendedProps.calendar_id);
-
-        event.setProp(
-            'display',
-            selectedCalendars.has(calendarId) ? 'auto' : 'none'
-        );
-
-    });
-
-}
-*/
-
-document.querySelectorAll('.calendar-filter').forEach((checkbox) => {
-
-    checkbox.addEventListener('change', () => {
-
-        const id = Number(checkbox.value);
-
-        if (checkbox.checked) {
-            selectedCalendars.add(id);
-        } else {
-            selectedCalendars.delete(id);
-        }
-
-        //applyCalendarFilter();
-
-    });
-
-});
-
-// Floating Action Button
-const fab = document.getElementById('newEventFab');
-
-if (fab) {
-
-    fab.addEventListener('click', () => {
-
-        ui.form.reset();
-
-        ui.id.value = '';
-
-        ui.modalTitle.textContent = 'Neuer Termin';
-
-        ui.deleteButton.style.display = 'none';
-
-        const start = new Date();
-        start.setHours(9,0,0,0);
-
-        const end = new Date(start);
-        end.setHours(10);
-
-        ui.start.value = toInput(start);
-        ui.end.value = toInput(end);
-
-        ui.allDay.checked = true;
-
-        toggleAllDayMode();
-
-        modal.show();
-
-    });
-
-}
-
 // -------------------------------------------------------------
-// Konstanten
+// Konfiguration
 // -------------------------------------------------------------
 
-const DEFAULT_START_HOUR = 9;
-const DEFAULT_DURATION_MINUTES = 60;
+const CONFIG = {
+    DEFAULT_START_HOUR: 9,
+    DEFAULT_DURATION_MINUTES: 60
+};
 
 // -------------------------------------------------------------
-// Datums-Helfer
+// 03 Utilities
 // -------------------------------------------------------------
 
-const pad = (n) => String(n).padStart(2, '0');
+const pad = (value) => String(value).padStart(2, '0');
 
-function toInput(date) {
+export function toInput(date) {
     return (
         `${date.getFullYear()}-` +
         `${pad(date.getMonth() + 1)}-` +
@@ -142,11 +77,11 @@ function toInput(date) {
     );
 }
 
-function fromApi(value) {
+export function fromApi(value) {
     return value ? value.substring(0, 16) : '';
 }
 
-function formatTime(date) {
+export function formatTime(date) {
     return date.toLocaleTimeString('de-DE', {
         hour: '2-digit',
         minute: '2-digit'
@@ -172,54 +107,103 @@ function toggleAllDayMode() {
         ui.start.disabled = true;
         ui.end.disabled = true;
 
-    } else {
-
-        ui.start.disabled = false;
-        ui.end.disabled = false;
-
+        return;
     }
 
+    ui.start.disabled = false;
+    ui.end.disabled = false;
+
+    if (ui.start.value.length === 16) {
+        rememberedStartTime = ui.start.value.substring(11, 16);
+    }
+
+    if (ui.end.value.length === 16) {
+        rememberedEndTime = ui.end.value.substring(11, 16);
+    }
 }
 
 ui.allDay.addEventListener('change', toggleAllDayMode);
 
 // -------------------------------------------------------------
-// API-Helfer
+// Floating Action Button
+// -------------------------------------------------------------
+
+const fab = document.getElementById('newEventFab');
+
+if (fab) {
+
+    fab.addEventListener('click', () => {
+
+        ui.form.reset();
+
+        ui.id.value = '';
+        ui.modalTitle.textContent = 'Neuer Termin';
+        ui.deleteButton.style.display = 'none';
+
+        const start = new Date();
+        start.setHours(CONFIG.DEFAULT_START_HOUR, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setMinutes(
+            end.getMinutes() + CONFIG.DEFAULT_DURATION_MINUTES
+        );
+
+        ui.start.disabled = false;
+        ui.end.disabled = false;
+
+        ui.start.value = toInput(start);
+        ui.end.value = toInput(end);
+
+        ui.allDay.checked = true;
+        toggleAllDayMode();
+
+        modal.show();
+    });
+}
+
+// -------------------------------------------------------------
+// 04 API Service
+// (Teil B beginnt genau hier)
+// -------------------------------------------------------------
+
+// -------------------------------------------------------------
+// 04 API Service
 // -------------------------------------------------------------
 
 const api = {
 
     async get(id) {
-        return fetch(`/api/events/${id}`).then(r => r.json());
+        const response = await fetch(`/api/events/${id}`);
+        return response.json();
     },
 
     async save(id, data) {
 
-    const url = id ? `/api/events/${id}` : '/api/events';
+        const url = id
+            ? `/api/events/${id}`
+            : '/api/events';
 
-    const response = await fetch(url, {
-        method: 'POST',
-        body: data
-    });
+        const response = await fetch(url, {
+            method: 'POST',
+            body: data
+        });
 
-    console.log('HTTP Status:', response.status);
+        const text = await response.text();
 
-    const text = await response.text();
-    console.log('Server Response:', text);
+        if (!response.ok) {
+            throw new Error(text);
+        }
 
-    if (!response.ok) {
-        throw new Error(text);
-    }
-
-    return JSON.parse(text);
-},
+        return JSON.parse(text);
+    },
 
     async remove(id) {
 
-        return fetch(`/api/events/${id}`, {
+        const response = await fetch(`/api/events/${id}`, {
             method: 'DELETE'
-        }).then(r => r.json());
+        });
 
+        return response.json();
     },
 
     async move(id, start, end) {
@@ -232,17 +216,18 @@ const api = {
             data.append('end', end);
         }
 
-        return fetch(`/api/events/${id}/move`, {
+        const response = await fetch(`/api/events/${id}/move`, {
             method: 'POST',
             body: data
-        }).then(r => r.json());
+        });
 
+        return response.json();
     }
 
 };
 
 // -------------------------------------------------------------
-// FullCalendar
+// 05 FullCalendar
 // -------------------------------------------------------------
 
 const calendar = new Calendar(calendarEl, {
@@ -256,6 +241,9 @@ const calendar = new Calendar(calendarEl, {
     locale: deLocale,
 
     initialView: 'dayGridMonth',
+
+    selectable: true,
+    editable: true,
 
     headerToolbar: {
         left: 'prev,next today',
@@ -278,66 +266,64 @@ const calendar = new Calendar(calendarEl, {
         hour12: false
     },
 
-    // Monatsansicht: 09:00–10:00 Titel
-eventContent(info) {
+    // ---------------------------------------------------------
+    // Monatsansicht: Uhrzeit + Titel
+    // ---------------------------------------------------------
 
-    const wrapper = document.createElement('div');
+    eventContent(info) {
 
-    wrapper.className = 'fc-tommy-event';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'fc-tommy-event';
 
-    const time = document.createElement('div');
-    time.className = 'fc-tommy-time';
+        const time = document.createElement('div');
+        time.className = 'fc-tommy-time';
 
-    if (!info.event.allDay) {
+        if (!info.event.allDay) {
 
-        const start = info.event.start.toLocaleTimeString('de-DE', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+            const start = formatTime(info.event.start);
 
-        const end = info.event.end
-            ? info.event.end.toLocaleTimeString('de-DE', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-              })
-            : '';
+            const end = info.event.end
+                ? formatTime(info.event.end)
+                : '';
 
-        time.textContent = `${start}${end ? '–' + end : ''}`;
+            time.textContent = end
+                ? `${start}–${end}`
+                : start;
 
-    } else {
+        } else {
 
-        time.textContent = 'Ganztägig';
+            time.textContent = 'Ganztägig';
 
-    }
+        }
 
-    const title = document.createElement('div');
-    title.className = 'fc-tommy-title';
-    title.textContent = info.event.title;
+        const title = document.createElement('div');
+        title.className = 'fc-tommy-title';
+        title.textContent = info.event.title;
 
-    wrapper.append(time, title);
+        wrapper.append(time, title);
 
-    return { domNodes: [wrapper] };
+        return {
+            domNodes: [wrapper]
+        };
 
-},
-
-    selectable: true,
-    editable: true,
-
-
+    },
 
     // ---------------------------------------------------------
     // Termine laden
     // ---------------------------------------------------------
 
-events: {
-    url: '/api/events',
-    method: 'GET',
+    events: {
+        url: '/api/events',
+        method: 'GET',
 
-    failure(error) {
-        console.error(error);
-        showToast('Termine konnten nicht geladen werden.', 'danger');
-    }
-},
+        failure(error) {
+            console.error(error);
+            showToast(
+                'Termine konnten nicht geladen werden.',
+                'danger'
+            );
+        }
+    },
 
     // ---------------------------------------------------------
     // Neuer Termin
@@ -350,7 +336,6 @@ events: {
         ui.id.value = '';
 
         ui.modalTitle.textContent = 'Neuer Termin';
-
         ui.deleteButton.style.display = 'none';
 
         ui.start.disabled = false;
@@ -361,18 +346,30 @@ events: {
 
         if (info.allDay) {
 
-            start.setHours(DEFAULT_START_HOUR, 0, 0, 0);
+            start.setHours(
+                CONFIG.DEFAULT_START_HOUR,
+                0,
+                0,
+                0
+            );
 
-            end.setHours(DEFAULT_START_HOUR + 1, 0, 0, 0);
+            end.setHours(
+                CONFIG.DEFAULT_START_HOUR + 1,
+                0,
+                0,
+                0
+            );
 
             ui.allDay.checked = true;
 
         } else {
 
-            end.setMinutes(end.getMinutes() + DEFAULT_DURATION_MINUTES);
+            end.setMinutes(
+                end.getMinutes() +
+                CONFIG.DEFAULT_DURATION_MINUTES
+            );
 
             ui.allDay.checked = false;
-
         }
 
         ui.start.value = toInput(start);
@@ -381,7 +378,6 @@ events: {
         toggleAllDayMode();
 
         modal.show();
-
     },
 
     // ---------------------------------------------------------
@@ -391,13 +387,15 @@ events: {
     eventClick(info) {
 
         api.get(info.event.id)
-            .then(event => {
+            .then((event) => {
 
-                ui.modalTitle.textContent = 'Termin bearbeiten';
+                ui.modalTitle.textContent =
+                    'Termin bearbeiten';
 
                 ui.id.value = event.id;
                 ui.title.value = event.title;
-                ui.description.value = event.description ?? '';
+                ui.description.value =
+                    event.description ?? '';
 
                 ui.start.disabled = false;
                 ui.end.disabled = false;
@@ -405,20 +403,23 @@ events: {
                 ui.start.value = fromApi(event.start);
                 ui.end.value = fromApi(event.end);
 
-                ui.allDay.checked = Boolean(Number(event.all_day));
+                ui.allDay.checked =
+                    Boolean(Number(event.all_day));
 
                 toggleAllDayMode();
 
                 ui.deleteButton.style.display = '';
 
                 modal.show();
-
             })
-            .catch(error => {
+            .catch((error) => {
 
                 console.error(error);
 
-                showToast('Termin konnte nicht geladen werden.', 'danger');
+                showToast(
+                    'Termin konnte nicht geladen werden.',
+                    'danger'
+                );
 
             });
 
@@ -438,20 +439,23 @@ events: {
 
     eventResize(info) {
         saveMove(info);
-    },
+    }
 
 });
 
+// -------------------------------------------------------------
+// Kalender rendern
+// -------------------------------------------------------------
 
-
-// Kalender anzeigen
 calendar.render();
 
-// Initialen Kalenderfilter anwenden
-//applyCalendarFilter();
+// -------------------------------------------------------------
+// 06 CRUD
+// (Teil C beginnt hier.)
+// -------------------------------------------------------------
 
 // -------------------------------------------------------------
-// Drag & Drop speichern
+// 06 CRUD
 // -------------------------------------------------------------
 
 async function saveMove(info) {
@@ -461,15 +465,19 @@ async function saveMove(info) {
         const json = await api.move(
             info.event.id,
             toInput(info.event.start),
-            info.event.end ? toInput(info.event.end) : ''
+            info.event.end
+                ? toInput(info.event.end)
+                : ''
         );
 
         if (!json.success) {
 
             info.revert();
 
-            showToast('Termin konnte nicht gespeichert werden.', 'danger');
-
+            showToast(
+                'Termin konnte nicht gespeichert werden.',
+                'danger'
+            );
         }
 
     } catch (error) {
@@ -478,10 +486,11 @@ async function saveMove(info) {
 
         info.revert();
 
-        showToast('Serverfehler beim Speichern.', 'danger');
-
+        showToast(
+            'Serverfehler beim Speichern.',
+            'danger'
+        );
     }
-
 }
 
 // -------------------------------------------------------------
@@ -506,22 +515,30 @@ ui.form.addEventListener('submit', async (e) => {
 
         const json = await api.save(ui.id.value, data);
 
-        if (json.success) {
-            modal.hide();
-            calendar.refetchEvents();
-            showToast('Termin gespeichert.');
+        if (!json.success) {
 
-        } else {
+            showToast(
+                'Termin konnte nicht gespeichert werden.',
+                'danger'
+            );
 
-            showToast('Termin konnte nicht gespeichert werden.', 'danger');
-
+            return;
         }
+
+        modal.hide();
+
+        calendar.refetchEvents();
+
+        showToast('Termin gespeichert.');
 
     } catch (error) {
 
         console.error(error);
 
-        showToast('Serverfehler beim Speichern.', 'danger');
+        showToast(
+            'Serverfehler beim Speichern.',
+            'danger'
+        );
 
     }
 
@@ -541,33 +558,68 @@ ui.deleteButton.addEventListener('click', async () => {
 
         const json = await api.remove(ui.id.value);
 
-        if (json.success) {
+        if (!json.success) {
 
-            modal.hide();
+            showToast(
+                'Termin konnte nicht gelöscht werden.',
+                'danger'
+            );
 
-            calendar.refetchEvents();
-            showToast('Termin gelöscht.');
-
-        } else {
-
-            showToast('Termin konnte nicht gelöscht werden.', 'danger');
-
+            return;
         }
+
+        modal.hide();
+
+        calendar.refetchEvents();
+
+        showToast('Termin gelöscht.');
 
     } catch (error) {
 
-        hideLoading();
         console.error(error);
 
-
-        showToast('Serverfehler beim Löschen.', 'danger');
+        showToast(
+            'Serverfehler beim Löschen.',
+            'danger'
+        );
 
     }
 
-    showLoading('Speichere Termin...');
+});
 
-const json = await api.save(ui.id.value, data);
+// -------------------------------------------------------------
+// 07 Drag & Drop & Resize
+// -------------------------------------------------------------
 
-hideLoading();
+// Wird von eventDrop() und eventResize() verwendet.
+// Logik zentral an einer Stelle.
+// -------------------------------------------------------------
+// 08 Initialisierung
+// Tommy Edition Foundation
+// -------------------------------------------------------------
+
+// Kalender beim ersten Laden anzeigen.
+calendar.render();
+
+// Modal beim Schließen zurücksetzen.
+const modalElement = document.getElementById('eventModal');
+
+modalElement.addEventListener('hidden.bs.modal', () => {
+
+    ui.form.reset();
+
+    ui.id.value = '';
+
+    ui.deleteButton.style.display = 'none';
+
+    ui.start.disabled = false;
+    ui.end.disabled = false;
+
+    ui.allDay.checked = true;
+
+    toggleAllDayMode();
 
 });
+
+// Tommy Edition Ready
+console.info('🚀 Tommy Edition Calendar v0.9 Foundation loaded.');
