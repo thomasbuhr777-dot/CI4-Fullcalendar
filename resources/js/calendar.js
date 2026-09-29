@@ -1,44 +1,21 @@
-// =============================================================
-// Tommy Edition v0.9 Foundation
-// FullCalendar + Bootstrap + CodeIgniter 4
-//
-// Referenzdatei für die Tommy Edition.
-//
-// Sections
-// 01 Imports
-// 02 UI & Modal
-// 03 Utilities
-// 04 API Service
-// 05 FullCalendar
-// 06 CRUD
-// 07 Drag & Drop & Resize
-// 08 Initialisierung
-// =============================================================
-
-// -------------------------------------------------------------
-// 01 Imports
-// -------------------------------------------------------------
-
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
-
 import { Modal } from 'bootstrap';
 import { showToast } from './toast';
 
-// -------------------------------------------------------------
-// 02 UI & Modal
-// -------------------------------------------------------------
-
 const calendarEl = document.getElementById('calendar');
+const workspace = document.getElementById('calendarWorkspace');
 
-if (!calendarEl) {
-    throw new Error('Kalender-Element #calendar wurde nicht gefunden.');
+if (!calendarEl || !workspace) {
+    throw new Error('Die Kalenderoberfläche wurde nicht vollständig geladen.');
 }
 
-const modal = new Modal(document.getElementById('eventModal'));
+const eventModal = new Modal(document.getElementById('eventModal'));
+const calendarModal = new Modal(document.getElementById('calendarModal'));
+const filterStorageKey = workspace.dataset.filterKey;
 
 const ui = {
     form: document.getElementById('eventForm'),
@@ -50,636 +27,288 @@ const ui = {
     end: document.getElementById('eventEnd'),
     allDay: document.getElementById('eventAllDay'),
     deleteButton: document.getElementById('deleteEvent'),
-    modalTitle: document.querySelector('#eventModal .modal-title')
+    modalTitle: document.querySelector('#eventModal .modal-title'),
+    filters: document.getElementById('calendarFilters'),
+    empty: document.getElementById('calendarEmpty'),
+    newCalendar: document.getElementById('newCalendarButton'),
+    saveCalendar: document.getElementById('saveCalendarButton'),
+    calendarName: document.getElementById('calendarName'),
+    calendarColor: document.getElementById('calendarColor'),
 };
-
-// -------------------------------------------------------------
-// Konfiguration
-// -------------------------------------------------------------
-
-const CONFIG = {
-    DEFAULT_START_HOUR: 9,
-    DEFAULT_DURATION_MINUTES: 60
-};
-
-// -------------------------------------------------------------
-// 03 Utilities
-// -------------------------------------------------------------
 
 const pad = (value) => String(value).padStart(2, '0');
 
-export function toInput(date) {
-    return (
-        `${date.getFullYear()}-` +
-        `${pad(date.getMonth() + 1)}-` +
-        `${pad(date.getDate())}T` +
-        `${pad(date.getHours())}:` +
-        `${pad(date.getMinutes())}`
-    );
+function toInput(date) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function fromApi(value) {
+function fromApi(value) {
     return value ? value.substring(0, 16) : '';
 }
 
-export function formatTime(date) {
-    return date.toLocaleTimeString('de-DE', {
-        hour: '2-digit',
-        minute: '2-digit'
+function formatTime(date) {
+    return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function messageFrom(error, fallback) {
+    return error instanceof Error && error.message ? error.message : fallback;
+}
+
+async function request(url, options = {}, write = false) {
+    if (write && !navigator.onLine) {
+        throw new Error('Ohne Internetverbindung können Änderungen nicht gespeichert werden.');
+    }
+
+    const response = await fetch(url, options);
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(body.message || 'Die Anfrage ist fehlgeschlagen.');
+    }
+
+    return body;
+}
+
+const api = {
+    get: (id) => request(`/api/events/${id}`),
+    save: (id, data) => request(id ? `/api/events/${id}` : '/api/events', { method: 'POST', body: data }, true),
+    remove: (id) => request(`/api/events/${id}`, { method: 'DELETE' }, true),
+    move(id, start, end) {
+        const data = new FormData();
+        data.append('start', start);
+        if (end) data.append('end', end);
+        return request(`/api/events/${id}/move`, { method: 'POST', body: data }, true);
+    },
+    createCalendar(data) {
+        return request('/api/calendars', { method: 'POST', body: data }, true);
+    },
+};
+
+function allCalendarIds() {
+    return [...ui.filters.querySelectorAll('.calendar-filter')].map((checkbox) => String(checkbox.value));
+}
+
+function storedSelection() {
+    const all = allCalendarIds();
+    const stored = localStorage.getItem(filterStorageKey);
+
+    if (stored === null) return all;
+
+    try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed.map(String).filter((id) => all.includes(id)) : all;
+    } catch {
+        return all;
+    }
+}
+
+let selectedCalendarIds = storedSelection();
+
+function persistSelection() {
+    localStorage.setItem(filterStorageKey, JSON.stringify(selectedCalendarIds));
+}
+
+function syncFilterControls() {
+    ui.filters.querySelectorAll('.calendar-filter').forEach((checkbox) => {
+        checkbox.checked = selectedCalendarIds.includes(String(checkbox.value));
     });
 }
 
-// -------------------------------------------------------------
-// Ganztägig umschalten
-// -------------------------------------------------------------
+function firstVisibleCalendarId() {
+    return selectedCalendarIds.find((id) => allCalendarIds().includes(id)) || allCalendarIds()[0] || '';
+}
 
-let rememberedStartTime = '09:00';
-let rememberedEndTime = '10:00';
-
-function toggleAllDayMode() {
-
-    const isAllDay = ui.allDay.checked;
-
-    if (isAllDay) {
-
-        rememberedStartTime = ui.start.value.substring(11, 16) || '09:00';
-        rememberedEndTime = ui.end.value.substring(11, 16) || '10:00';
-
-        ui.start.disabled = true;
-        ui.end.disabled = true;
-
+function prepareNewEvent(start = new Date(), allDay = true) {
+    if (allCalendarIds().length === 0) {
+        showToast('Lege zuerst einen Kalender an.', 'info');
         return;
     }
 
-    ui.start.disabled = false;
-    ui.end.disabled = false;
+    ui.form.reset();
+    ui.id.value = '';
+    ui.modalTitle.textContent = 'Neuer Termin';
+    ui.deleteButton.classList.add('d-none');
+    ui.calendar.value = firstVisibleCalendarId();
 
-    if (ui.start.value.length === 16) {
-        rememberedStartTime = ui.start.value.substring(11, 16);
-    }
+    const eventStart = new Date(start);
+    if (allDay) eventStart.setHours(9, 0, 0, 0);
+    const eventEnd = new Date(eventStart);
+    eventEnd.setHours(eventEnd.getHours() + 1);
 
-    if (ui.end.value.length === 16) {
-        rememberedEndTime = ui.end.value.substring(11, 16);
-    }
+    ui.start.value = toInput(eventStart);
+    ui.end.value = toInput(eventEnd);
+    ui.allDay.checked = allDay;
+    eventModal.show();
 }
 
-ui.allDay.addEventListener('change', toggleAllDayMode);
-
-// -------------------------------------------------------------
-// Floating Action Button
-// -------------------------------------------------------------
-
-const fab = document.getElementById('newEventFab');
-
-if (fab) {
-
-    fab.addEventListener('click', () => {
-
-        ui.form.reset();
-
-        ui.id.value = '';
-        ui.modalTitle.textContent = 'Neuer Termin';
-        ui.deleteButton.style.display = 'none';
-
-        const start = new Date();
-        start.setHours(CONFIG.DEFAULT_START_HOUR, 0, 0, 0);
-
-        const end = new Date(start);
-        end.setMinutes(
-            end.getMinutes() + CONFIG.DEFAULT_DURATION_MINUTES
+async function saveMove(info) {
+    try {
+        const result = await api.move(
+            info.event.id,
+            toInput(info.event.start),
+            info.event.end ? toInput(info.event.end) : ''
         );
-
-        ui.start.disabled = false;
-        ui.end.disabled = false;
-
-        ui.start.value = toInput(start);
-        ui.end.value = toInput(end);
-
-        ui.allDay.checked = true;
-        toggleAllDayMode();
-
-        modal.show();
-    });
-}
-
-// -------------------------------------------------------------
-// 04 API Service
-// (Teil B beginnt genau hier)
-// -------------------------------------------------------------
-
-// -------------------------------------------------------------
-// 04 API Service
-// -------------------------------------------------------------
-
-const api = {
-
-    async get(id) {
-        const response = await fetch(`/api/events/${id}`);
-        return response.json();
-    },
-
-    async save(id, data) {
-
-        const url = id
-            ? `/api/events/${id}`
-            : '/api/events';
-
-        const response = await fetch(url, {
-            method: 'POST',
-            body: data
-        });
-
-        const text = await response.text();
-
-        if (!response.ok) {
-            throw new Error(text);
-        }
-
-        return JSON.parse(text);
-    },
-
-    async remove(id) {
-
-        const response = await fetch(`/api/events/${id}`, {
-            method: 'DELETE'
-        });
-
-        return response.json();
-    },
-
-    async move(id, start, end) {
-
-        const data = new FormData();
-
-        data.append('start', start);
-
-        if (end) {
-            data.append('end', end);
-        }
-
-        const response = await fetch(`/api/events/${id}/move`, {
-            method: 'POST',
-            body: data
-        });
-
-        return response.json();
+        if (!result.success) throw new Error('Termin konnte nicht gespeichert werden.');
+    } catch (error) {
+        info.revert();
+        showToast(messageFrom(error, 'Termin konnte nicht gespeichert werden.'), 'danger');
     }
-
-};
-
-// -------------------------------------------------------------
-// 05 FullCalendar
-// -------------------------------------------------------------
+}
 
 const calendar = new Calendar(calendarEl, {
-
-    plugins: [
-        dayGridPlugin,
-        timeGridPlugin,
-        interactionPlugin
-    ],
-
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     locale: deLocale,
-
     initialView: 'dayGridMonth',
-
     selectable: true,
     editable: true,
-
     headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay',
     },
-
-    buttonText: {
-        today: 'Heute',
-        month: 'Monat',
-        week: 'Woche',
-        day: 'Tag'
-    },
-
-    displayEventTime: true,
-
-    eventTimeFormat: {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    },
-
-    // ---------------------------------------------------------
-    // Monatsansicht: Uhrzeit + Titel
-    // ---------------------------------------------------------
-
+    buttonText: { today: 'Heute', month: 'Monat', week: 'Woche', day: 'Tag' },
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     eventContent(info) {
-
         const wrapper = document.createElement('div');
         wrapper.className = 'fc-tommy-event';
-
         const time = document.createElement('div');
         time.className = 'fc-tommy-time';
-
-        if (!info.event.allDay) {
-
-            const start = formatTime(info.event.start);
-
-            const end = info.event.end
-                ? formatTime(info.event.end)
-                : '';
-
-            time.textContent = end
-                ? `${start}–${end}`
-                : start;
-
-        } else {
-
-            time.textContent = 'Ganztägig';
-
-        }
-
+        time.textContent = info.event.allDay
+            ? 'Ganztägig'
+            : `${formatTime(info.event.start)}${info.event.end ? `–${formatTime(info.event.end)}` : ''}`;
         const title = document.createElement('div');
         title.className = 'fc-tommy-title';
         title.textContent = info.event.title;
-
         wrapper.append(time, title);
-
-        return {
-            domNodes: [wrapper]
-        };
-
+        return { domNodes: [wrapper] };
     },
-
-    // ---------------------------------------------------------
-    // Termine laden
-    // ---------------------------------------------------------
-
-    events: {
-        url: '/api/events',
-        method: 'GET',
-
-        failure(error) {
-            console.error(error);
-            showToast(
-                'Termine konnten nicht geladen werden.',
-                'danger'
-            );
-        }
-    },
-
-    // ---------------------------------------------------------
-    // Neuer Termin
-    // ---------------------------------------------------------
-
-    dateClick(info) {
-
-        ui.form.reset();
-
-        ui.id.value = '';
-
-        ui.modalTitle.textContent = 'Neuer Termin';
-        ui.deleteButton.style.display = 'none';
-
-        ui.start.disabled = false;
-        ui.end.disabled = false;
-
-        const start = new Date(info.date);
-        const end = new Date(info.date);
-
-        if (info.allDay) {
-
-            start.setHours(
-                CONFIG.DEFAULT_START_HOUR,
-                0,
-                0,
-                0
-            );
-
-            end.setHours(
-                CONFIG.DEFAULT_START_HOUR + 1,
-                0,
-                0,
-                0
-            );
-
-            ui.allDay.checked = true;
-
-        } else {
-
-            end.setMinutes(
-                end.getMinutes() +
-                CONFIG.DEFAULT_DURATION_MINUTES
-            );
-
-            ui.allDay.checked = false;
-        }
-
-        ui.start.value = toInput(start);
-        ui.end.value = toInput(end);
-
-        toggleAllDayMode();
-
-        modal.show();
-    },
-
-    // ---------------------------------------------------------
-    // Termin bearbeiten
-    // ---------------------------------------------------------
-
-    eventClick(info) {
-
-        api.get(info.event.id)
-            .then((event) => {
-
-                ui.modalTitle.textContent =
-                    'Termin bearbeiten';
-
-                ui.id.value = event.id;
-                ui.title.value = event.title;
-                ui.description.value =
-                    event.description ?? '';
-
-                ui.calendar.value = String(event.calendar_id);
-
-                ui.start.disabled = false;
-                ui.end.disabled = false;
-
-                ui.start.value = fromApi(event.start);
-                ui.end.value = fromApi(event.end);
-
-                ui.allDay.checked =
-                    Boolean(Number(event.all_day));
-
-                toggleAllDayMode();
-
-                ui.deleteButton.style.display = '';
-
-                modal.show();
-            })
+    events(info, success, failure) {
+        const params = new URLSearchParams({
+            start: info.startStr,
+            end: info.endStr,
+            calendar_ids: selectedCalendarIds.join(','),
+        });
+        request(`/api/events?${params}`)
+            .then(success)
             .catch((error) => {
-
-                console.error(error);
-
-                showToast(
-                    'Termin konnte nicht geladen werden.',
-                    'danger'
-                );
-
+                failure(error);
+                showToast(messageFrom(error, 'Termine konnten nicht geladen werden.'), 'danger');
             });
-
     },
-
-    // ---------------------------------------------------------
-    // Drag & Drop
-    // ---------------------------------------------------------
-
-    eventDrop(info) {
-        saveMove(info);
+    dateClick(info) {
+        prepareNewEvent(info.date, info.allDay);
     },
-
-    // ---------------------------------------------------------
-    // Resize
-    // ---------------------------------------------------------
-
-    eventResize(info) {
-        saveMove(info);
-    }
-
+    async eventClick(info) {
+        try {
+            const event = await api.get(info.event.id);
+            ui.form.reset();
+            ui.modalTitle.textContent = 'Termin bearbeiten';
+            ui.id.value = event.id;
+            ui.title.value = event.title;
+            ui.description.value = event.description ?? '';
+            ui.calendar.value = String(event.calendar_id);
+            ui.start.value = fromApi(event.start);
+            ui.end.value = fromApi(event.end);
+            ui.allDay.checked = Boolean(Number(event.all_day));
+            ui.deleteButton.classList.remove('d-none');
+            eventModal.show();
+        } catch (error) {
+            showToast(messageFrom(error, 'Termin konnte nicht geladen werden.'), 'danger');
+        }
+    },
+    eventDrop: saveMove,
+    eventResize: saveMove,
 });
 
-// -------------------------------------------------------------
-// Kalender rendern
-// -------------------------------------------------------------
-
-calendar.render();
-
-// -------------------------------------------------------------
-// 06 CRUD
-// (Teil C beginnt hier.)
-// -------------------------------------------------------------
-
-// -------------------------------------------------------------
-// 06 CRUD
-// -------------------------------------------------------------
-
-async function saveMove(info) {
-
+ui.form.addEventListener('submit', async (event) => {
+    event.preventDefault();
     try {
-
-        const json = await api.move(
-            info.event.id,
-            toInput(info.event.start),
-            info.event.end
-                ? toInput(info.event.end)
-                : ''
-        );
-
-        if (!json.success) {
-
-            info.revert();
-
-            showToast(
-                'Termin konnte nicht gespeichert werden.',
-                'danger'
-            );
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
-        info.revert();
-
-        showToast(
-            'Serverfehler beim Speichern.',
-            'danger'
-        );
-    }
-}
-
-// -------------------------------------------------------------
-// Formular speichern
-// -------------------------------------------------------------
-
-ui.form.addEventListener('submit', async (e) => {
-
-    e.preventDefault();
-
-    const data = new FormData(ui.form);
-
-    if (ui.start.disabled) {
-        data.set('start', ui.start.value);
-    }
-
-    if (ui.end.disabled) {
-        data.set('end', ui.end.value);
-    }
-
-    try {
-
-        const json = await api.save(ui.id.value, data);
-
-        if (!json.success) {
-
-            showToast(
-                'Termin konnte nicht gespeichert werden.',
-                'danger'
-            );
-
-            return;
-        }
-
-        modal.hide();
-
+        const result = await api.save(ui.id.value, new FormData(ui.form));
+        if (!result.success) throw new Error('Termin konnte nicht gespeichert werden.');
+        eventModal.hide();
         calendar.refetchEvents();
-
         showToast('Termin gespeichert.');
-
     } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            'Serverfehler beim Speichern.',
-            'danger'
-        );
-
+        showToast(messageFrom(error, 'Termin konnte nicht gespeichert werden.'), 'danger');
     }
-
 });
-
-// -------------------------------------------------------------
-// Termin löschen
-// -------------------------------------------------------------
 
 ui.deleteButton.addEventListener('click', async () => {
+    if (!ui.id.value || !confirm('Termin wirklich löschen?')) return;
+    try {
+        const result = await api.remove(ui.id.value);
+        if (!result.success) throw new Error('Termin konnte nicht gelöscht werden.');
+        eventModal.hide();
+        calendar.refetchEvents();
+        showToast('Termin gelöscht.');
+    } catch (error) {
+        showToast(messageFrom(error, 'Termin konnte nicht gelöscht werden.'), 'danger');
+    }
+});
 
-    if (!ui.id.value) return;
+ui.filters.addEventListener('change', (event) => {
+    if (!event.target.matches('.calendar-filter')) return;
+    selectedCalendarIds = [...ui.filters.querySelectorAll('.calendar-filter:checked')]
+        .map((checkbox) => String(checkbox.value));
+    persistSelection();
+    calendar.refetchEvents();
+});
 
-    if (!confirm('Termin wirklich löschen?')) return;
+function appendCalendar(item) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'calendar-item';
+    wrapper.dataset.calendarId = item.id;
+
+    const label = document.createElement('label');
+    label.className = 'calendar-switch flex-grow-1';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'calendar-filter form-check-input';
+    checkbox.value = item.id;
+    checkbox.checked = true;
+    const color = document.createElement('span');
+    color.className = 'calendar-color';
+    color.style.background = item.color;
+    const name = document.createElement('span');
+    name.className = 'calendar-name';
+    name.textContent = item.name;
+    label.append(checkbox, color, name);
+    wrapper.append(label);
+    ui.filters.append(wrapper);
+
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.dataset.color = item.color;
+    option.textContent = `${item.name} (${item.color})`;
+    ui.calendar.append(option);
+    ui.empty.classList.add('d-none');
+}
+
+ui.newCalendar.addEventListener('click', () => {
+    ui.calendarName.value = '';
+    ui.calendarColor.value = '#16A34A';
+    calendarModal.show();
+});
+
+ui.saveCalendar.addEventListener('click', async () => {
+    const data = new FormData();
+    data.append('name', ui.calendarName.value);
+    data.append('color', ui.calendarColor.value);
 
     try {
-
-        const json = await api.remove(ui.id.value);
-
-        if (!json.success) {
-
-            showToast(
-                'Termin konnte nicht gelöscht werden.',
-                'danger'
-            );
-
-            return;
-        }
-
-        modal.hide();
-
+        const result = await api.createCalendar(data);
+        appendCalendar(result.calendar);
+        selectedCalendarIds.push(String(result.calendar.id));
+        selectedCalendarIds = [...new Set(selectedCalendarIds)];
+        persistSelection();
+        calendarModal.hide();
         calendar.refetchEvents();
-
-        showToast('Termin gelöscht.');
-
+        showToast('Kalender angelegt.');
     } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            'Serverfehler beim Löschen.',
-            'danger'
-        );
-
+        showToast(messageFrom(error, 'Kalender konnte nicht angelegt werden.'), 'danger');
     }
-
 });
 
-// -------------------------------------------------------------
-// 07 Drag & Drop & Resize
-// -------------------------------------------------------------
-
-// Wird von eventDrop() und eventResize() verwendet.
-// Logik zentral an einer Stelle.
-// -------------------------------------------------------------
-// 08 Initialisierung
-// Tommy Edition Foundation
-// -------------------------------------------------------------
-
-// Kalender beim ersten Laden anzeigen.
+document.getElementById('newEventFab')?.addEventListener('click', () => prepareNewEvent());
+syncFilterControls();
 calendar.render();
-
-// Modal beim Schließen zurücksetzen.
-const modalElement = document.getElementById('eventModal');
-
-modalElement.addEventListener('hidden.bs.modal', () => {
-
-    ui.form.reset();
-
-    ui.id.value = '';
-
-    ui.deleteButton.style.display = 'none';
-
-    ui.start.disabled = false;
-    ui.end.disabled = false;
-
-    ui.allDay.checked = true;
-
-    toggleAllDayMode();
-
-});
-
-const calendarModal = new Modal(
-    document.getElementById('calendarModal')
-);
-
-document
-    .getElementById('newCalendarButton')
-    .addEventListener('click', () => {
-
-        document.getElementById('calendarName').value = '';
-        document.getElementById('calendarColor').value = '#16A34A';
-
-        calendarModal.show();
-
-    });
-
-document
-    .getElementById('saveCalendarButton')
-    .addEventListener('click', async () => {
-
-        const data = new FormData();
-
-        data.append(
-            'name',
-            document.getElementById('calendarName').value
-        );
-
-        data.append(
-            'color',
-            document.getElementById('calendarColor').value
-        );
-
-        const response = await fetch('/api/calendars', {
-            method: 'POST',
-            body: data
-        });
-
-        const json = await response.json();
-
-        if (json.success) {
-
-            calendarModal.hide();
-
-            location.reload();
-
-            showToast('Kalender angelegt.');
-
-        } else {
-
-            showToast(
-                'Kalender konnte nicht angelegt werden.',
-                'danger'
-            );
-
-        }
-
-    });
-
-// Tommy Edition Ready
-console.info('🚀 Tommy Edition Calendar v0.9 Foundation loaded.');

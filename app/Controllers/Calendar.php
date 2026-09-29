@@ -22,6 +22,7 @@ class Calendar extends BaseController
         return view('calendar/index', [
             'title'     => 'Kalender',
             'calendars' => $calendars,
+            'tenantId'  => $tenantId,
         ]);
     }
 }

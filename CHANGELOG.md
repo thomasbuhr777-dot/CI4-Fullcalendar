@@ -11,10 +11,12 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 ### Added
 - Kalenderauswahl für neue und bestehende Termine.
 - Mandantensichere Tests für Kalenderauswahl und Termin-Feed.
+- Sofort wirksame Kalenderfilter mit mandantenspezifischer Speicherung im Browser.
 
 ### Changed
 - Termin-API liefert `calendar_id` und übernimmt Farben ausschließlich aus dem zugeordneten Kalender.
 - Erstellung und Änderung weisen Kalender fremder Mandanten serverseitig ab.
+- Neu angelegte Kalender erscheinen ohne Reload und sind standardmäßig sichtbar.
 
 ## v0.9.1 — Calendar Management
 

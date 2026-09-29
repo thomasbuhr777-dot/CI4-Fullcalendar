@@ -33,7 +33,10 @@ class EventModel extends Model
             ->where('calendars.is_active', 1)
             ->where('events.start <', $end)
             ->groupStart()
-                ->where($this->db->protectIdentifiers('events.end') . ' IS NULL', null, false)
+                ->groupStart()
+                    ->where($this->db->protectIdentifiers('events.end') . ' IS NULL', null, false)
+                    ->where('events.start >=', $start)
+                ->groupEnd()
                 ->orWhere('events.end >', $start)
             ->groupEnd()
             ->orderBy('events.start', 'ASC');

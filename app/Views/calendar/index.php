@@ -2,6 +2,7 @@
 
 <?= $this->section('content') ?>
 
+<div id="calendarWorkspace" data-filter-key="calendar.filters.tenant.<?= (int) ($tenantId ?? 0) ?>">
 <div class="card shadow-sm">
 
     <div class="card-body">
@@ -46,6 +47,7 @@
 
     </div>
 
+</div>
 </div>
 <div class="modal fade" id="eventModal" tabindex="-1">
 
@@ -153,9 +155,8 @@
                         Abbrechen
                     </button>
                     <button
-    class="btn btn-danger me-auto"
+    class="btn btn-danger me-auto d-none"
     id="deleteEvent"
-    style="display:none"
     type="button">
 
     Löschen

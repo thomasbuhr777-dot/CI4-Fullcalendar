@@ -77,6 +77,12 @@ final class TenantCalendarIsolationTest extends CIUnitTestCase
         $this->assertSame('Eigener Termin', $events[0]['title']);
         $this->assertSame($this->calendarOne, (int) $events[0]['calendar_id']);
         $this->assertSame('#2563EB', $events[0]['calendar_color']);
+        $this->assertSame([], (new EventModel())->calendarEvents(
+            $this->tenantOne,
+            '2026-09-01 00:00:00',
+            '2026-10-01 00:00:00',
+            []
+        ));
     }
 
     private function insertEvent(int $tenantId, int $calendarId, string $title): void
