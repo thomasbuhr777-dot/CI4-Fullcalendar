@@ -6,6 +6,12 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ---
 
+## [v1.0.1] — 2026-09-29 — Dashboard Hotfix
+
+### Fixed
+- Die gemeinsame Sidebar kann nach Login auch ohne Kalenderkontext auf dem Dashboard gerendert werden.
+- Kalenderfilter und deren Aktionen werden nur auf der Kalenderseite ausgegeben.
+
 ## [v1.0.0] — 2026-09-29 — Stand-alone Calendar PWA
 
 ### Added

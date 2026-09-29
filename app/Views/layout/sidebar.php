@@ -1,3 +1,8 @@
+<?php
+$hasCalendarContext = isset($calendars);
+$calendars = $calendars ?? [];
+?>
+
 <aside class="col-md-3 col-xl-2 bg-light border-end app-sidebar collapse d-md-block py-4 px-3" id="appSidebar">
     <nav class="nav flex-column mb-4">
         <a class="nav-link" href="<?= site_url('dashboard') ?>">
@@ -8,6 +13,7 @@
         </a>
     </nav>
 
+    <?php if ($hasCalendarContext): ?>
     <div class="calendar-sidebar">
         <div class="sidebar-title">Meine Kalender</div>
 
@@ -34,4 +40,5 @@
             <i class="bi bi-plus-circle me-2"></i>Neuer Kalender
         </button>
     </div>
+    <?php endif; ?>
 </aside>
