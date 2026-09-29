@@ -1,7 +1,7 @@
 <nav class="navbar navbar-dark bg-primary px-3">
 
     <a class="navbar-brand" href="/dashboard">
-        📅 Kalender
+        <i class="bi bi-calendar3"></i> Kalender
     </a>
 
     <div class="ms-auto text-white">

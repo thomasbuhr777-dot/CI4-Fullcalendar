@@ -588,3 +588,52 @@ body {
 .calendar-add:hover {
     color: var(--tommy-blue-dark);
 }
+
+/* ==========================================================
+   Tommy Edition – Kalenderliste
+========================================================== */
+
+.calendar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .35rem;
+    margin-bottom: .35rem;
+}
+
+.calendar-switch {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex: 1;
+    margin: 0;
+    cursor: pointer;
+}
+
+.calendar-menu-btn {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+
+    color: #94A3B8;
+    opacity: 0;
+
+    transition: all .15s ease;
+    flex-shrink: 0;
+}
+
+.calendar-item:hover .calendar-menu-btn {
+    opacity: 1;
+}
+
+.calendar-menu-btn:hover {
+    background: #EFF6FF;
+    color: var(--tommy-blue);
+}

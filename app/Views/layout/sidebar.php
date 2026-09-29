@@ -27,26 +27,43 @@
     <div class="calendar-sidebar">
         <div class="sidebar-title">Meine Kalender</div>
 
-        <?php foreach ($calendars as $calendar): ?>
-            <label class="calendar-switch">
+     <?php foreach ($calendars as $calendar): ?>
 
-                <input
-                    type="checkbox"
-                    class="calendar-filter"
-                    value="<?= $calendar['id'] ?>"
-                    checked>
+    <div class="calendar-item">
 
-                <span
-                    class="calendar-color"
-                    style="background: <?= esc($calendar['color']) ?>">
-                </span>
+        <label class="calendar-switch flex-grow-1">
 
-                <span class="calendar-name">
-                    <?= esc($calendar['name']) ?>
-                </span>
+            <input
+                type="checkbox"
+                class="calendar-filter"
+                value="<?= $calendar['id'] ?>"
+                checked>
 
-            </label>
-        <?php endforeach; ?>
+            <span
+                class="calendar-color"
+                style="background: <?= esc($calendar['color']) ?>">
+            </span>
+
+            <span class="calendar-name">
+                <?= esc($calendar['name']) ?>
+            </span>
+
+        </label>
+
+        <button
+            type="button"
+            class="calendar-menu-btn"
+            data-calendar-id="<?= $calendar['id'] ?>"
+            data-calendar-name="<?= esc($calendar['name']) ?>"
+            data-calendar-color="<?= esc($calendar['color']) ?>">
+
+            <i class="bi bi-three-dots-vertical"></i>
+
+        </button>
+
+    </div>
+
+<?php endforeach; ?>
         <button
     class="btn btn-link calendar-add p-0 mt-3"
     id="newCalendarButton">

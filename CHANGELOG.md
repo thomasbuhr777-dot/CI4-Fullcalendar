@@ -6,6 +6,31 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ---
 
+## v0.9.1 — Calendar Management
+
+### Added
+- Neues Modal „Kalender anlegen“.
+- API `POST /api/calendars`.
+- Kalender können einem Mandanten hinzugefügt werden.
+- Sidebar zeigt mehrere Kalender dynamisch an.
+
+### Changed
+- Sidebar rendert Kalender aus `CalendarModel::forTenant()`.
+- 
+## v0.9.0 — Foundation
+
+### Refactored
+- `calendar.js` vollständig als Tommy Edition Reference File neu strukturiert.
+- Klare Kapitelstruktur (Imports, UI, Utilities, API, Calendar, CRUD, Drag & Drop, Initialisierung).
+- Tote Debug- und Overlay-Reste entfernt.
+- Datums- und Zeit-Helfer zentralisiert.
+- Konfiguration (`CONFIG`) eingeführt.
+
+### Changed
+- Keine Änderung der Benutzeroberfläche.
+- Keine Änderung der Kalenderfunktionalität.
+- Grundlage für zukünftige Features geschaffen.
+
 ## [v0.8.3] – 2026-09-22 — Event Polish
 
 ### Added
