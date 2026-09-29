@@ -45,6 +45,7 @@ const ui = {
     id: document.getElementById('eventId'),
     title: document.getElementById('eventTitle'),
     description: document.getElementById('eventDescription'),
+    calendar: document.getElementById('eventCalendar'),
     start: document.getElementById('eventStart'),
     end: document.getElementById('eventEnd'),
     allDay: document.getElementById('eventAllDay'),
@@ -396,6 +397,8 @@ const calendar = new Calendar(calendarEl, {
                 ui.title.value = event.title;
                 ui.description.value =
                     event.description ?? '';
+
+                ui.calendar.value = String(event.calendar_id);
 
                 ui.start.disabled = false;
                 ui.end.disabled = false;

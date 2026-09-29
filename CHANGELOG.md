@@ -6,6 +6,16 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ---
 
+## [Unreleased]
+
+### Added
+- Kalenderauswahl für neue und bestehende Termine.
+- Mandantensichere Tests für Kalenderauswahl und Termin-Feed.
+
+### Changed
+- Termin-API liefert `calendar_id` und übernimmt Farben ausschließlich aus dem zugeordneten Kalender.
+- Erstellung und Änderung weisen Kalender fremder Mandanten serverseitig ab.
+
 ## v0.9.1 — Calendar Management
 
 ### Added

@@ -82,6 +82,18 @@
                             type="text">
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label" for="eventCalendar">Kalender</label>
+                        <select class="form-select" id="eventCalendar" name="calendar_id" required>
+                            <?php foreach ($calendars as $calendar): ?>
+                                <option value="<?= (int) $calendar['id'] ?>" data-color="<?= esc($calendar['color']) ?>">
+                                    <?= esc($calendar['name']) ?> (<?= esc($calendar['color']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">Die Terminfarbe wird vom gewählten Kalender übernommen.</div>
+                    </div>
+
                     <div class="row">
 
     <div class="col-md-6 mb-3">

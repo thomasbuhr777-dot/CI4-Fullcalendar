@@ -6,77 +6,65 @@ use CodeIgniter\Model;
 
 class EventModel extends Model
 {
-    protected $table      = 'events';
+    protected $table = 'events';
     protected $primaryKey = 'id';
-
     protected $returnType = 'array';
     protected $useTimestamps = true;
 
     protected $allowedFields = [
-        'tenant_id',
-        'calendar_id',
-        'category_id',
-        'title',
-        'description',
-        'start',
-        'end',
-        'all_day',
-        'created_by',
+        'tenant_id', 'calendar_id', 'category_id', 'title', 'description',
+        'start', 'end', 'all_day', 'created_by',
     ];
 
-    /**
-     * Termine für FullCalendar inklusive Kalenderfarbe.
-     */
-    public function calendarEvents(int $tenantId, string $start, string $end): array
+    /** @param list<int>|null $calendarIds null means all tenant calendars, [] means none */
+    public function calendarEvents(int $tenantId, string $start, string $end, ?array $calendarIds = null): array
     {
-        $events = $this->select([
-                'events.*',
-                'calendars.name AS calendar_name',
-                'calendars.color',
-            ])
-            ->join('calendars', 'calendars.id = events.calendar_id')
-            ->where('events.tenant_id', $tenantId)
-            ->where('events.start >=', $start)
-            ->where('events.start <=', $end)
-            ->orderBy('events.start', 'ASC')
-            ->findAll();
-
-        foreach ($events as &$event) {
-
-            $event['backgroundColor'] = $event['color'];
-            $event['borderColor']     = $event['color'];
-            $event['textColor']       = '#FFFFFF';
-
+        if ($calendarIds === []) {
+            return [];
         }
 
-        return $events;
+        $builder = $this->select([
+                'events.*',
+                'calendars.name AS calendar_name',
+                'calendars.color AS calendar_color',
+            ])
+            ->join('calendars', 'calendars.id = events.calendar_id AND calendars.tenant_id = events.tenant_id')
+            ->where('events.tenant_id', $tenantId)
+            ->where('calendars.is_active', 1)
+            ->where('events.start <', $end)
+            ->groupStart()
+                ->where($this->db->protectIdentifiers('events.end') . ' IS NULL', null, false)
+                ->orWhere('events.end >', $start)
+            ->groupEnd()
+            ->orderBy('events.start', 'ASC');
+
+        if ($calendarIds !== null) {
+            $builder->whereIn('events.calendar_id', $calendarIds);
+        }
+
+        return $builder->findAll();
     }
 
-    /**
-     * Einzelnen Termin eines Tenants finden.
-     */
     public function findTenantEvent(int $tenantId, int $id): ?array
     {
-        return $this->where('tenant_id', $tenantId)
-                    ->find($id);
+        return $this->where('tenant_id', $tenantId)->find($id);
     }
 
-    /**
-     * Termin aktualisieren.
-     */
     public function updateTenantEvent(int $tenantId, int $id, array $data): bool
     {
-        return $this->where('tenant_id', $tenantId)
-                    ->set($data)
-                    ->update($id);
+        if ($this->findTenantEvent($tenantId, $id) === null) {
+            return false;
+        }
+
+        return $this->update($id, $data);
     }
 
-    /**
-     * Termin löschen.
-     */
     public function deleteTenantEvent(int $tenantId, int $id): bool
     {
-        return $this->where('tenant_id', $tenantId)
-                    ->delete($id);
+        if ($this->findTenantEvent($tenantId, $id) === null) {
+            return false;
+        }
+
+        return $this->delete($id);
     }
 }

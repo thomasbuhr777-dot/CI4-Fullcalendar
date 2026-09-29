@@ -8,15 +8,14 @@ class Calendar extends BaseController
 {
     public function index()
     {
-        // Aktiver Tenant aus der Session
-        $tenantId = (int) session('tenant_id');
+        $tenantId = service('tenant')->id();
 
         $calendarModel = new CalendarModel();
 
         $calendars = [];
 
         // Nur laden, wenn ein Tenant vorhanden ist
-        if ($tenantId > 0) {
+        if ($tenantId !== null) {
             $calendars = $calendarModel->forTenant($tenantId);
         }
 
