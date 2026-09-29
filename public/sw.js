@@ -32,7 +32,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (['style', 'script', 'font', 'image', 'manifest'].includes(request.destination)) {
+    const isStaticAsset = url.pathname.startsWith('/build/') || STATIC_FILES.includes(url.pathname);
+
+    if (isStaticAsset) {
         event.respondWith(
             caches.match(request).then((cached) => cached || fetch(request).then((response) => {
                 if (response.ok) {

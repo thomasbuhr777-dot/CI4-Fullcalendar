@@ -6,6 +6,7 @@
 
 # Vite Build
 /public/build/
+/build/
 
 # CI4 writable Verzeichnis
 /writable/*

@@ -6,7 +6,7 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ---
 
-## [Unreleased]
+## [v1.0.0] — 2026-09-29 — Stand-alone Calendar PWA
 
 ### Added
 - Kalenderauswahl für neue und bestehende Termine.

@@ -1,69 +1,130 @@
-# CodeIgniter 4 Application Starter
+# Tommy Kalender
 
-## What is CodeIgniter?
+Tommy Kalender ist eine eigenständig betreibbare, mandantenfähige Kalender-PWA auf Basis von CodeIgniter 4, Shield, FullCalendar, Bootstrap 5 und Vite. Sie ist für Desktop, Tablet und Handy ausgelegt und enthält keine Abhängigkeiten zu hv3.io.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Voraussetzungen
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+- PHP 8.2 oder neuer mit `intl`, `mbstring`, `mysqli` und für Tests `sqlite3`
+- Composer 2
+- Node.js mit npm
+- MySQL oder MariaDB
+- Webserver mit Document Root auf `public/`
+- HTTPS im Produktivbetrieb (Service Worker und Installation benötigen einen sicheren Kontext)
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+`localhost` und `127.0.0.1` gelten in aktuellen Browsern als sichere Testkontexte. Ein Aufruf über eine unverschlüsselte LAN-IP genügt dafür nicht.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Installation
 
-## Installation & updates
+```bash
+composer install
+npm install
+cp env .env
+```
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+Mindestens diese Werte in `.env` setzen:
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+```ini
+CI_ENVIRONMENT = production
+app.baseURL = 'https://kalender.example.de/'
+database.default.hostname = localhost
+database.default.database = kalender
+database.default.username = kalender
+database.default.password = 'sicheres-passwort'
+database.default.DBDriver = MySQLi
+```
 
-## Setup
+Danach Schema und Frontend erzeugen:
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+```bash
+php spark migrate --all
+npm run build
+```
 
-## Important Change with index.php
+Für lokale Beispieldaten kann optional `php spark db:seed DemoSeeder` verwendet werden. Der Seeder erwartet bereits mindestens einen Shield-Benutzer. Produktionszugänge niemals über den Demo-Seeder anlegen.
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## Lokaler Start
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+```bash
+php spark serve
+npm run dev
+```
 
-**Please** read the user guide for a better explanation of how CI4 works!
+Der Vite-Entwicklungsserver liefert nur Assets; die Anwendung selbst wird über CodeIgniter aufgerufen. Alternativ genügt nach `npm run build` allein der CodeIgniter-Server.
 
-## Repository Management
+## Datenbank und Migrationen
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+Neue Installationen erhalten Mandanten, Zuordnungen, Kalender, Kategorien und Termine über die vorhandenen Migrationen. `events.calendar_id` ist bereits Teil der ursprünglichen Event-Migration und deshalb war für diese Version keine nachträgliche Schemaänderung nötig. Bestehende Migrationen wurden nicht verändert.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Vor einem Update:
 
-## Server Requirements
+```bash
+php spark migrate:status
+php spark migrate --all
+```
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+Bestehende Termine behalten ihre Kalenderzuordnung. Fehlt bei einem älteren API-Client beim Erstellen `calendar_id`, wird aus Kompatibilitätsgründen der erste aktive Kalender des Mandanten verwendet. Beim Bearbeiten ist eine gültige Kalender-ID erforderlich.
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+## Bedienung
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+- Kalender werden unter „Meine Kalender“ unmittelbar ein- und ausgeblendet.
+- Die Auswahl wird mandantenspezifisch in `localStorage` gespeichert und bleibt nach Ansichtswechsel und Reload erhalten.
+- Auch eine vollständig leere Auswahl ist zulässig.
+- Neue Kalender erscheinen ohne Reload und sind zunächst sichtbar.
+- Die Farbe eines Termins stammt immer aus seinem Kalender.
+- Drag & Drop und Resize speichern neue Zeiten sofort; bei einem Fehler wird die Änderung zurückgenommen.
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+Auf kleinen Bildschirmen öffnet die Schaltfläche „Meine Kalender und Filter“ die eingeklappte Seitenleiste. Termin- und Kalendermodale nutzen auf Handys die volle Bildschirmfläche.
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## PWA-Installation und Offline-Verhalten
+
+1. Anwendung über HTTPS öffnen und anmelden.
+2. In Chrome/Edge „App installieren“ beziehungsweise im Browsermenü „Zum Startbildschirm hinzufügen“ wählen.
+3. Nach einem Deployment einmal neu laden, damit der aktualisierte Service Worker aktiv wird.
+
+Die PWA arbeitet online-first:
+
+- Geschützte HTML-Seiten und `/api/*` werden nie im Service Worker gecacht.
+- Nur statische Assets wie JavaScript, CSS, Schriften, Manifest und Icon dürfen im Cache liegen.
+- Ohne Verbindung erscheint ein Offline-Hinweis.
+- Erstellen, Ändern, Verschieben und Löschen werden offline vor dem Request abgewiesen und niemals als erfolgreich dargestellt.
+- Eine noch nicht geladene Seite zeigt offline eine neutrale Hinweisseite statt einer zuvor angemeldeten Oberfläche.
+
+Damit bleibt nach einem Logout kein geschützter Seiten- oder Termininhalt aus dem Service-Worker-Cache sichtbar.
+
+## Tests und Build
+
+```bash
+composer test -- --no-coverage
+npm run build
+```
+
+Unter XAMPP muss `extension=sqlite3` in `php.ini` aktiv sein. Für einen einmaligen Lauf ohne Konfigurationsänderung:
+
+```bash
+php -d extension=sqlite3 vendor/bin/phpunit --no-coverage
+```
+
+Die Datenbanktests prüfen insbesondere:
+
+- Kalenderauflösung nur innerhalb des aktiven Mandanten,
+- Entfernung fremder Kalender-IDs aus Filterabfragen,
+- gemeinsame Mandanten-/Kalendergrenze im Termin-Feed,
+- Kalenderfarbe aus der serverseitigen Zuordnung,
+- leeren Feed bei vollständig abgewählten Kalendern.
+
+Manuelle Abnahme vor einem Release:
+
+1. Zwei Kalender mit verschiedenen Farben anlegen und Termine zuordnen.
+2. Beide Filter einzeln und gemeinsam aus-/einschalten; Monat, Woche und Tag sowie Reload prüfen.
+3. Einen Termin in einen anderen eigenen Kalender verschieben und erneut öffnen.
+4. Fremde `calendar_id` bei Erstellung und Änderung per HTTP-Client senden; Status 422 erwarten.
+5. Erstellen, Bearbeiten, Löschen, Drag & Drop und Resize prüfen.
+6. Browserbreiten um 375 px und 768 px sowie Offline/Online-Wechsel testen.
+7. Manifest und Service Worker in den Browser-Entwicklertools auf Installierbarkeit kontrollieren.
+
+## Bekannte Grenzen
+
+- Kalender eines Mandanten sind gemeinsam sichtbar; private Benutzerkalender und feinere Rechte sind nicht Bestandteil dieser Version.
+- Offline werden keine Terminlisten bereitgestellt und keine Änderungen in eine Warteschlange gestellt.
+- Ein Wechsel zwischen mehreren Mandanten ist noch nicht Teil der Oberfläche; verwendet wird der Shield-Standardmandant des Benutzers.
+- Die spätere Integration in hv3.io ist ausdrücklich ein separates Projekt.

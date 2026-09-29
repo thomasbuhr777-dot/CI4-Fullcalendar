@@ -90,7 +90,13 @@ function allCalendarIds() {
 
 function storedSelection() {
     const all = allCalendarIds();
-    const stored = localStorage.getItem(filterStorageKey);
+    let stored = null;
+
+    try {
+        stored = localStorage.getItem(filterStorageKey);
+    } catch {
+        return all;
+    }
 
     if (stored === null) return all;
 
@@ -105,7 +111,11 @@ function storedSelection() {
 let selectedCalendarIds = storedSelection();
 
 function persistSelection() {
-    localStorage.setItem(filterStorageKey, JSON.stringify(selectedCalendarIds));
+    try {
+        localStorage.setItem(filterStorageKey, JSON.stringify(selectedCalendarIds));
+    } catch {
+        // Die Filter funktionieren weiterhin für die aktuelle Sitzung.
+    }
 }
 
 function syncFilterControls() {
