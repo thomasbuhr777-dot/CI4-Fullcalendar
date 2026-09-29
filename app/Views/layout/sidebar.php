@@ -1,4 +1,4 @@
-<aside class="col-md-3 col-xl-2 bg-light border-end app-sidebar py-4 px-3" id="appSidebar">
+<aside class="col-md-3 col-xl-2 bg-light border-end app-sidebar collapse d-md-block py-4 px-3" id="appSidebar">
     <nav class="nav flex-column mb-4">
         <a class="nav-link" href="<?= site_url('dashboard') ?>">
             <i class="bi bi-speedometer2 me-2"></i>Dashboard

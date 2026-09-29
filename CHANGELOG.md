@@ -12,11 +12,16 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 - Kalenderauswahl für neue und bestehende Termine.
 - Mandantensichere Tests für Kalenderauswahl und Termin-Feed.
 - Sofort wirksame Kalenderfilter mit mandantenspezifischer Speicherung im Browser.
+- Installierbare Online-first-PWA mit Manifest, App-Icon, Service Worker und Offline-Hinweis.
 
 ### Changed
 - Termin-API liefert `calendar_id` und übernimmt Farben ausschließlich aus dem zugeordneten Kalender.
 - Erstellung und Änderung weisen Kalender fremder Mandanten serverseitig ab.
 - Neu angelegte Kalender erscheinen ohne Reload und sind standardmäßig sichtbar.
+- Seitenleiste, Modale, Toolbar und Bedienelemente reagieren auf Handy- und Tabletbreiten.
+
+### Security
+- Der Service Worker speichert weder Termin-API-Antworten noch geschützte HTML-Seiten im Cache.
 
 ## v0.9.1 — Calendar Management
 

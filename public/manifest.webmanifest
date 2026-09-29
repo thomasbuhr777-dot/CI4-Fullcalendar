@@ -1,0 +1,19 @@
+{
+  "name": "Tommy Kalender",
+  "short_name": "Kalender",
+  "description": "Mandantenfähiger Kalender für Handy, Tablet und Desktop.",
+  "lang": "de-DE",
+  "start_url": "/calendar",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/icons/calendar.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

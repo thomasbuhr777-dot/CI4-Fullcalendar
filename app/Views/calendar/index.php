@@ -51,7 +51,7 @@
 </div>
 <div class="modal fade" id="eventModal" tabindex="-1">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
 
         <div class="modal-content">
 
@@ -184,7 +184,7 @@
 
 <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
 
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
 
         <div class="modal-content">
 
