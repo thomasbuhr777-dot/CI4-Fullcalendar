@@ -9,8 +9,11 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Dashboard::index', ['filter' => 'session']);
 $routes->get('dashboard', 'Dashboard::index', ['filter' => 'session']);
 $routes->get('calendar', 'Calendar::index', ['filter' => 'session']);
+$routes->get('settings', 'Settings::index', ['filter' => 'session']);
+$routes->post('settings', 'Settings::index', ['filter' => ['session', 'csrf']]);
 
 $routes->group('api', ['filter' => 'session'], static function ($routes) {
+   $routes->get('holidays', 'Api\Holiday::index');
 
    $routes->get('events', 'Api\Event::index');
    $routes->post('events', 'Api\Event::create');

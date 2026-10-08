@@ -152,6 +152,7 @@ function prepareNewEvent(start = new Date(), allDay = true) {
 }
 
 async function saveMove(info) {
+    if (info.event.extendedProps.holiday) { info.revert(); return; }
     try {
         const result = await api.move(
             info.event.id,
@@ -168,7 +169,7 @@ async function saveMove(info) {
 const calendar = new Calendar(calendarEl, {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     locale: deLocale,
-    initialView: 'dayGridMonth',
+    initialView: workspace.dataset.defaultView || 'dayGridMonth',
     selectable: true,
     editable: true,
     headerToolbar: {
@@ -184,7 +185,7 @@ const calendar = new Calendar(calendarEl, {
         const time = document.createElement('div');
         time.className = 'fc-tommy-time';
         time.textContent = info.event.allDay
-            ? 'Ganztägig'
+            ? (info.event.extendedProps.holiday ? `Feiertag${info.event.extendedProps.stale ? ' · veraltet' : ''}` : 'Ganztägig')
             : `${formatTime(info.event.start)}${info.event.end ? `–${formatTime(info.event.end)}` : ''}`;
         const title = document.createElement('div');
         title.className = 'fc-tommy-title';
@@ -192,7 +193,19 @@ const calendar = new Calendar(calendarEl, {
         wrapper.append(time, title);
         return { domNodes: [wrapper] };
     },
-    events(info, success, failure) {
+    eventSources: [{ id: 'holidays', events(info, success) {
+        const status = document.getElementById('holidayStatus');
+        const params = new URLSearchParams({ start: info.startStr, end: info.endStr });
+        request(`/api/holidays?${params}`).then((body) => {
+            status.textContent = body.messages.join(' ');
+            status.classList.toggle('d-none', body.messages.length === 0);
+            success(body.events);
+        }).catch(() => {
+            status.textContent = 'Feiertage konnten derzeit nicht geladen werden. Eigene Termine bleiben nutzbar.';
+            status.classList.remove('d-none');
+            success([]);
+        });
+    } }, { id: 'personal', events(info, success, failure) {
         const params = new URLSearchParams({
             start: info.startStr,
             end: info.endStr,
@@ -204,11 +217,12 @@ const calendar = new Calendar(calendarEl, {
                 failure(error);
                 showToast(messageFrom(error, 'Termine konnten nicht geladen werden.'), 'danger');
             });
-    },
+    } }],
     dateClick(info) {
         prepareNewEvent(info.date, info.allDay);
     },
     async eventClick(info) {
+        if (info.event.extendedProps.holiday) return;
         try {
             const event = await api.get(info.event.id);
             ui.form.reset();
@@ -261,7 +275,7 @@ ui.filters.addEventListener('change', (event) => {
     selectedCalendarIds = [...ui.filters.querySelectorAll('.calendar-filter:checked')]
         .map((checkbox) => String(checkbox.value));
     persistSelection();
-    calendar.refetchEvents();
+    calendar.getEventSourceById('personal').refetch();
 });
 
 function appendCalendar(item) {

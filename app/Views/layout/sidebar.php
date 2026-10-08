@@ -8,9 +8,10 @@ $calendars = $calendars ?? [];
         <a class="nav-link" href="<?= site_url('dashboard') ?>">
             <i class="bi bi-speedometer2 me-2"></i>Dashboard
         </a>
-        <a class="nav-link active" href="<?= site_url('calendar') ?>">
+        <a class="nav-link <?= ($title ?? '') === 'Kalender' ? 'active' : '' ?>" href="<?= site_url('calendar') ?>">
             <i class="bi bi-calendar3 me-2"></i>Kalender
         </a>
+        <a class="nav-link <?= ($title ?? '') === 'Einstellungen' ? 'active' : '' ?>" href="<?= site_url('settings') ?>"><i class="bi bi-gear me-2"></i>Einstellungen</a>
     </nav>
 
     <?php if ($hasCalendarContext): ?>

@@ -8,6 +8,7 @@ class Calendar extends BaseController
 {
     public function index()
     {
+        $this->response->setHeader('Cache-Control', 'private, no-store');
         $tenantId = service('tenant')->id();
 
         $calendarModel = new CalendarModel();
@@ -23,6 +24,8 @@ class Calendar extends BaseController
             'title'     => 'Kalender',
             'calendars' => $calendars,
             'tenantId'  => $tenantId,
+            'preferences' => $tenantId === null ? \App\Models\CalendarPreferenceModel::defaults()
+                : (new \App\Models\CalendarPreferenceModel())->preferences((int) auth()->id(), $tenantId),
         ]);
     }
 }

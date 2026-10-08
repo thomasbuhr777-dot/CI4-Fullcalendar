@@ -20,6 +20,11 @@ use App\Services\TenantService;
  */
 class Services extends BaseService
 {
+    public static function holidays(bool $getShared = true): \App\Services\HolidayService
+    {
+        if ($getShared) return static::getSharedInstance('holidays');
+        return new \App\Services\HolidayService(service('curlrequest'), service('cache'), WRITEPATH . 'cache/holidays.lock');
+    }
     /*
      * public static function example($getShared = true)
      * {

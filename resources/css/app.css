@@ -763,3 +763,12 @@ body {
         font-size: 1.5rem;
     }
 }
+.fc .holiday-event {
+    cursor: default;
+    border: 1px dashed #997404 !important;
+    white-space: normal;
+}
+.holiday-event .fc-tommy-event { min-width: 0; width: 100%; }
+.holiday-event .fc-tommy-title { font-weight: 600; overflow-wrap: anywhere; }
+.holiday-event:hover { transform: none; box-shadow: none; }
+.settings-card { max-width: 48rem; }

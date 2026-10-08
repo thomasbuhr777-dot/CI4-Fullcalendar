@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 
-<div id="calendarWorkspace" data-filter-key="calendar.filters.tenant.<?= (int) ($tenantId ?? 0) ?>">
+<div id="calendarWorkspace" data-default-view="<?= esc($preferences['view'] ?? 'dayGridMonth') ?>" data-filter-key="calendar.filters.tenant.<?= (int) ($tenantId ?? 0) ?>">
 <div class="card shadow-sm">
 
     <div class="card-body">
@@ -41,6 +41,7 @@
 
 </div>
 
+        <p id="holidayStatus" class="small text-secondary d-none" role="status" aria-live="polite"></p>
         <div id="calendar"></div>
 
 

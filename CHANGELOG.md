@@ -6,6 +6,27 @@ Das Projekt orientiert sich an Keep a Changelog und Semantic Versioning.
 
 ---
 
+## [v1.1.0] — 2026-10-08 — Einstellungen und Feiertage
+
+### Added
+- Geschützte Einstellungen für Standardansicht, alle 16 Bundesländer und Feiertagsjahre pro Shield-Benutzer und aktivem Mandanten; neue Migration mit eindeutigem Benutzer-/Mandantenschlüssel.
+- Dynamische Vorgaben: Monat, Niedersachsen und aktuelles Jahr plus Folgejahr; Validierung und sofortige Anwendung nach Speichern.
+- Geschützter Feiertagsfeed mit serverseitigem CodeIgniter-HTTP-Client für api-feiertage.de, Prüfung der Anbieterantwort und Bundeslandzugehörigkeit.
+- Schreibgeschützte, optisch abgesetzte Ganztagsfeiertage in Monat/Woche/Tag, unabhängig von eigenen Kalenderfiltern.
+- Gemeinsamer Cache je Bundesland/Jahr: 24 Stunden frisch, 90 Tage Rückfall, 15 Minuten Wiederholsperre bei Fehlern/fehlenden Jahren und rollierendes Budget von 90 Aufrufen pro Stunde mit lokaler Dateisperre.
+- Verständliche Hinweise bei fehlenden Jahrgängen und veralteten Daten; eigene Termine bleiben unabhängig nutzbar.
+
+### Changed
+- Navigation einschließlich Einstellungen ist auf dem Handy auch außerhalb des Kalenders erreichbar.
+- Lange Feiertagsnamen werden in schmalen Kalenderzellen umbrochen; Feiertage öffnen keinen Editor und bieten keine Änderungsaktionen.
+- Kalender, Einstellungen und Feiertagsfeed erhalten `private, no-store`; der bestehende Service Worker bleibt auf statische Assets begrenzt.
+
+### Validation
+- PHP-Suite: 22 Tests / 102 Assertions erfolgreich, mit gefälschtem API-Client, echter Shield-Anmeldung/Abmeldung und isolierter SQLite-Testdatenbank; bestehende und neue Terminoperationstests eingeschlossen.
+- `npm run build` erfolgreich.
+- Settings und alle drei Kalenderansichten visuell auf 390 × 844 und 820 × 1180 Pixeln mit gerenderten Testseiten/echten Assets geprüft; Filterunabhängigkeit und Feiertagsklick zusätzlich im Browser geprüft.
+- Anbieterjahre sind nicht garantiert; lokale Cache-/Aufrufkoordination gilt je Installation. Physische Mobilgeräte und produktiver Mehrserverbetrieb wurden nicht geprüft. Details in README.
+
 ## [v1.0.1] — 2026-09-29 — Dashboard Hotfix
 
 ### Fixed

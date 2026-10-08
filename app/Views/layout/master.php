@@ -28,13 +28,11 @@
 </div>
 
 <div class="container-fluid">
-    <?php if (isset($calendars)): ?>
         <div class="mobile-calendar-actions d-md-none py-2">
             <button class="btn btn-outline-primary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#appSidebar" aria-expanded="false" aria-controls="appSidebar">
-                <i class="bi bi-funnel me-2"></i>Meine Kalender und Filter
+                <i class="bi bi-list me-2"></i>Navigation und Kalender
             </button>
         </div>
-    <?php endif; ?>
     <div class="row">
 
        <?= $this->include('layout/sidebar', ['calendars' => $calendars ?? []]) ?>

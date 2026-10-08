@@ -66,6 +66,30 @@ Bestehende Termine behalten ihre Kalenderzuordnung. Fehlt bei einem älteren API
 
 ## Bedienung
 
+### Einstellungen und deutsche Feiertage (v1.1.0)
+
+Über „Einstellungen“ in der Navigation (auf dem Handy über „Navigation und Kalender“) lassen sich Standardansicht, Bundesland und Feiertagsjahre speichern. Die neue Migration `2026-10-08-120000_CreateCalendarPreferences` muss mit `php spark migrate --all` angewendet werden; danach `npm run build` ausführen. Vorhandene Migrationen bleiben unverändert. Die PHP-Erweiterung `curl` und ausgehendes HTTPS zu `get.api-feiertage.de` werden benötigt.
+
+Die Speicherung erfolgt pro Shield-Benutzer und aktivem Mandanten mit einem eindeutigen Datenbankschlüssel. Neue Benutzer erhalten Monat, Niedersachsen und dynamisch das aktuelle Kalenderjahr plus Folgejahr. Die Jahresauswahl bietet das aktuelle Jahr minus zwei bis plus fünf sowie bereits gespeicherte Jahre. Serverseitig sind höchstens 20 unterschiedliche Jahre zwischen 2000 und 2100 zulässig. Eine leere Auswahl schaltet Feiertage aus. Nach Speichern öffnet der Kalender mit der gewählten Ansicht; manuelle Ansichtswechsel bleiben möglich. Die bestehenden Kalenderfilter in `localStorage` bleiben davon unabhängig.
+
+Die Datenquelle ist [api-feiertage.de](https://www.api-feiertage.de/). Nur der Server ruft über den CodeIgniter-HTTP-Client `https://get.api-feiertage.de/` mit `years` und `states` auf. Der geschützte Endpoint `GET /api/holidays?start=…&end=…` liefert ausschließlich ausgewählte Jahre, die den sichtbaren Zeitraum einschließlich Monats-/Wochenrändern betreffen; `end` ist exklusiv. HTTP-Status, JSON-Struktur, `status=success`, Datumswerte und Bundesland-Markierungen werden geprüft. Bundesweite und für das ausgewählte Land markierte Feiertage erscheinen als gelbe, gestrichelt umrandete Ganztagstermine in allen drei Ansichten. Sie öffnen keinen Editor, sind weder verschiebbar noch veränderbar und bleiben unabhängig von „Meine Kalender“ sichtbar.
+
+Normalisierte Daten werden im gemeinsamen CodeIgniter-Servercache nach Bundesland/Jahr gespeichert: 24 Stunden frisch, bis zu 90 Tage als Rückfall bei Ausfällen. Veraltete Daten erhalten einen Hinweis im Kalender und in der Terminbeschriftung. Fehler und noch nicht verfügbare Jahre lösen eine 15-minütige Wiederholsperre aus; eine erfolgreiche leere Antwort wird **nicht** als vollständiger Feiertagsbestand gespeichert. Ein später veröffentlichter Jahrgang kann nach Ablauf der Sperre erneut geladen werden. Eigene Termine werden unabhängig geladen und bleiben bei Anbieterfehlern bedienbar.
+
+Eine lokale Dateisperre verhindert parallele externe Aufrufe; ein rollierendes Stundenbudget erlaubt höchstens 90 Aufrufe je Installation und hält Abstand zum dokumentierten Anbieterlimit von 100 pro Stunde. `writable/cache` muss beschreibbar sein; der Cache darf nicht auf einen Dummy-Handler umgestellt werden. Mehrere Prozesse derselben Installation teilen Cache und Sperre. Bei mehreren Servern/Installationen hinter derselben öffentlichen IP ist eine gemeinsame Cache-/Sperrstrategie nötig; die lokale Begrenzung koordiniert diese nicht. Das Löschen des Caches löscht auch das Stundenbudget. Der Cache enthält nur öffentliche Feiertagsdaten, keine Benutzereinstellungen.
+
+Der Anbieter garantiert keine unbegrenzt verfügbaren historischen oder künftigen Jahrgänge. Die Auswahl eines Jahres bedeutet nicht, dass bereits Daten vorhanden sind. Ortsabhängige Sonderfälle (etwa Augsburger Friedensfest oder Mariä Himmelfahrt in bestimmten Gemeinden) werden nicht nach Ort konfiguriert; angezeigt werden die vom Anbieter für das Bundesland markierten Daten. Die Angaben des Anbieters ersetzen keine Prüfung örtlicher Feiertagsregeln.
+
+Die PWA bleibt online-first. Der Service Worker speichert ausschließlich statische Assets, keine geschützten HTML-Seiten oder API-/Einstellungsdaten. Kalender, Einstellungen und Feiertagsfeed senden zusätzlich `Cache-Control: private, no-store`.
+
+### Ausgeführte Prüfungen für v1.1.0
+
+- PHP-Suite inklusive gefälschtem Feiertags-HTTP-Client: **22 Tests, 102 Assertions erfolgreich**, `php -d extension=sqlite3 vendor/phpunit/phpunit/phpunit --no-coverage` (SQLite ist lokal vorhanden, aber im Standard-CLI nicht aktiviert). Defaults, Validierung, Shield-Logout/Login, Benutzer-/Mandantentrennung, geschützte Routen, sofort wirksame Ansicht, Feiertagszuordnung, Jahreswechsel, Cache, Fehler, fehlende Jahre und Stundenbudget werden ohne Live-API-Aufrufe getestet.
+- Regressionen für eigene Termine: Anlegen, Lesen, Bearbeiten, Verschieben/Verlängern, Filter und Löschen über die geschützten API-Routen; bestehende Isolationstests laufen mit.
+- `npm run build` mit npm aus der lokalen Node-Installation erfolgreich. Der im PATH vorangestellte npm-Wrapper ist auf diesem Rechner defekt.
+- Visuelle Prüfung in Edge/Chromium mit 390 × 844 und 820 × 1180 Pixeln: gerenderte authentifizierte Testseiten, echte Vite-Assets, gefälschte API-Antworten. Einstellungen sowie Monat/Woche/Tag geprüft, lange Feiertagsnamen umbrochen, kein horizontaler Überlauf und keine JavaScript-Fehler. Feiertagsklick öffnet keinen Editor; Kalendercheckboxen entfernen nur eigene Termine und laden die Feiertagsquelle nicht erneut.
+- Eine echte Anbieterantwort wurde einmal separat zur Prüfung der Feldnamen gelesen; sie ist keine Testabhängigkeit. Tests verwenden ausschließlich Fakes. Installation/Touchgesten auf physischen Mobilgeräten und ein produktiver Mehrserverbetrieb wurden nicht geprüft.
+
 - Kalender werden unter „Meine Kalender“ unmittelbar ein- und ausgeblendet.
 - Die Auswahl wird mandantenspezifisch in `localStorage` gespeichert und bleibt nach Ansichtswechsel und Reload erhalten.
 - Auch eine vollständig leere Auswahl ist zulässig.
